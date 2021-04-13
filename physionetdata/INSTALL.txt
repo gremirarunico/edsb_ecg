@@ -2,4 +2,4 @@ Scaricare ed estrarre qui il contenuto di https://physionet.org/static/published
 In alternativa (da Windows, da MAC solo se installato brew e avere installato wget con brew install wget) posizionarsi nella directory da Windows Power Shell e dare
 wget -r -N -c -np https://physionet.org/files/ltafdb/1.0.0/
 
-Spostare tutti gli file eventuali in sotto-directory nella directory principale.
+Spostare tutti gli eventuali file in sotto-directory nella directory principale.
