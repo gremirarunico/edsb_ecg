@@ -8,4 +8,5 @@ for record in records:
     os.system("../mcode/nativelibs/macosx/bin/wfdb2mat -r " + record + " > out/" + record + "_datalog" + ".txt")
     os.system("mv " + record + "m.mat ./out/")
     # https://www.physionet.org/physiotools/wag/rdsamp-1.htm
+    print(record)
     os.system("../mcode/nativelibs/macosx/bin/rdsamp -H -v -r " + record + " > out/" + record + "_data" + ".txt")
