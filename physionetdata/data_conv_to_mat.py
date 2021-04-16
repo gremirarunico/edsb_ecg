@@ -6,5 +6,6 @@ records = ['00', '01', '03', '05', '06', '07', '08', '10', '100', '101', '102', 
 # https://www.physionet.org/physiotools/wag/wfdb2m-1.htm
 
 for record in records:
-    os.system("../mcode/nativelibs/macosx/bin/wfdb2mat -r " + record + " > out/" + record + "_datalog" + ".txt")
-    os.system("mv " + record + "m.mat ./out/")
+    #os.system("../mcode/nativelibs/macosx/bin/wfdb2mat -r " + record + " > out/" + record + "_datalog" + ".txt")
+    #os.system("mv " + record + "m.mat ./out/")
+    os.system("../mcode/nativelibs/macosx/bin/rdsamp -H -v -r " + record + " > out/" + record + "_data" + ".txt")
