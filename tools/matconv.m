@@ -1,3 +1,7 @@
+% Breve script per convertire i file .mat generati da physionet
+% in una versione compatibile con la cache autocostruita dalla funzione
+% loadphysionet che carica i files dalla versione testuale sempre generata
+% da physionet
 workDir = uigetdir(); %gets directory
 myFiles = dir(fullfile(workDir,'*.mat')); %gets all wav files in struct
 for k = 1:length(myFiles)
