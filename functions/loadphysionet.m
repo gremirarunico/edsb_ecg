@@ -16,6 +16,9 @@
 % info è una struttura dati contenenti varie informazioni sul segnale:
 % * info.signals, numero di segnali
 % * info.totalsamples numero di campioni per segnale
+% * info.timestart when registration started
+% * info.date date recording
+% * info.duration duration recording
 % * info.samplingFrequency frequenza di campionamento del segnale
 % * info.gain guadagno del segnale, è un array visto che vale per ogni segnale
 % * info.base linea base del segnale, come gain
@@ -59,17 +62,22 @@ switch action
                     info.error = 'Source file is corrupted';
                     return;
                 end
+                % get registration start
+                info.timestart = findtextbetween('Start: [', ' ', line);
+                info.date = findtextbetween([info.timestart,' '], ']', line);
                 % second line get signals number and samles number
             elseif i == 2
                 info.signals = str2num(findtextbetween('val has ', ' rows (signals)', line));
                 info.totalsamples = str2num(findtextbetween('(signals) and ', ' columns (samples', line));
                 %forth line get sampling frequency
+            elseif i ==3
+                info.duration = findtextbetween('Duration: ', sprintf('\n'), line);
             elseif i ==4
                 info.samplingFrequency = str2num(findtextbetween('Sampling frequency: ', ' Hz  Sampling', line));
                 %lines for all signals
                 info.gain = [];
                 info.base = [];
-            % get gain and base for each signal
+                % get gain and base for each signal
             elseif i > 5 && i <= 5 + info.signals
                 gain = findtextbetween('ECG	', '	', line);
                 base = findtextbetween([gain(end),'	'], '	mV', line);
@@ -88,7 +96,7 @@ switch action
         if isfile([path, name, suffixDataMat])
             %disp('Found cached data, loading it...');
             load([path, name, suffixDataMat])
-        % else i have to laod it form a textfile, it will be extremly slow :(
+            % else i have to laod it form a textfile, it will be extremly slow :(
         else
             oldpercent = 0;
             wbar = waitbar(0, 'Waiting, loading file from txt');
@@ -134,17 +142,17 @@ switch action
         
     case 'atr'
         dataout = 0;
-        status = 0;
+        info.exit = 0;
+        info.error = 0;
         
     case 'qrs'
         dataout = 0;
-        status = 0;
+        info.exit = 0;
+        info.error = 0;
         
     otherwise
         dataout = 0;
-        status = 1;
+        info.exit = 1;
+        info.error = 'Unexpected value action in loadphysionet!';
         warning('Unexpected value action in loadphysionet!');
 end
-
-end
-
