@@ -10,7 +10,7 @@ for k = 1:length(myFiles)
     fullFileName = fullfile(workDir, baseFileName);
     fprintf(1, 'Now processing %s\n', fullFileName);
     load(fullFileName);
-    dataout = val;
+    dataout = val';
     save(fullFileName,'dataout');
     % all of your actions for filtering and plotting go here
 end

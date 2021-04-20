@@ -1,5 +1,3 @@
 # MACOS
 *.DS_Store
 physionetdata/*
-!physionetdata/INSTALL.txt
-!*.py
