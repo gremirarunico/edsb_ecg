@@ -25,6 +25,12 @@
 % * info.exit stato di uscita della funzione, 0 se tutto ok, 1 se errore
 % * info.error in caso di errore è definita, fornisce l'errore
 
+% per azione ecg
+% * dataout.sample array of int: sample considered
+% * dataout.beat array of char: type of beat
+% * info.date(x,:) string related to x^th beat indicated date sample
+% * info.time(x,:) string related to x^th beat indicated time sample
+
 % Type seleziona il tipo di dato e può essere ecg per caricare i battiti
 function [dataout, info] = loadphysionet(action, name)
 % dummy definitions
@@ -34,7 +40,7 @@ suffixDataMat = '_data.mat';
 suffixDatalog = '_datalog.txt';
 suffixAtr = '.atr.txt';
 suffixHea = '.hea.txt';
-suffxQrs = '.qrs.txt';
+suffixQrs = '.qrs.txt';
 
 switch action
     case 'ecg'
@@ -121,7 +127,7 @@ switch action
                 percent = round(dataline(1)/info.totalsamples, 2);
                 if percent ~= oldpercent
                     oldpercent = percent;
-                    waitbar(percent,wbar,sprintf('Processing your data from txt... %d%%', round(percent*100)));
+                    waitbar(percent,wbar,sprintf('Processing your QRS data from txt... %d%%', round(percent*100)));
                 end
                 
                 line = fgets(fLog);
@@ -145,11 +151,63 @@ switch action
         info.exit = 0;
         info.error = 0;
         
+    % TODO: cache to accelerate
     case 'qrs'
-        dataout = 0;
+        % load log file
+        [fLog, fLogerr] = fopen([path, name, suffixQrs], 'r');
+        % If file not found return error
+        if not(isempty(fLogerr)) && (strcmp(fLogerr, 'No such file or directory'))
+            dataout = 0;
+            info.exit = 1;
+            info.error = 'No such file or directory';
+            return;
+        end
+        
+        % get file lines
+        lines = 0;
+        while fgetl(fLog)~=-1
+            lines = lines + 1;
+        end
+        lines = lines - 2; %last line is empty and first is header
+        %disp(lines);
+        
+        frewind(fLog);
+        
+        % load data
+        fgets(fLog); % i can miss first line because there is the header
+        line = fgets(fLog);
+        wbar = waitbar(0, 'Waiting, loading qrs from txt');
+        
+        info.time = reshape(blanks(lines*12), lines, 12);
+        info.date = reshape(blanks(lines*10), lines, 10);
+        dataout.sample = zeros(lines, 1);
+        dataout.beat = reshape(blanks(lines), lines, 1);
+        i=0;
+        oldpercent = 0;
+        while(line ~= -1)
+            i = i+1;
+            percent = round(i/lines*100);
+            if oldpercent ~= percent
+                oldpercent = percent;
+                waitbar(percent/100,wbar,sprintf('Processing your data from txt... %d%%', percent));
+            end
+            splitted = split(line);
+            time = cell2mat(splitted(1));
+            info.time(i, :) = time(2:end);
+            
+            date = cell2mat(splitted(2));
+            info.date(i, :) = date(1:end-1);
+            
+            dataout.sample(i) = str2num(cell2mat(splitted(3)));
+            
+            dataout.beat(i) = cell2mat(splitted(4));
+            
+            line = fgets(fLog);
+        end
+        close(wbar);
+        
         info.exit = 0;
         info.error = 0;
-        
     otherwise
         dataout = 0;
         info.exit = 1;
