@@ -93,7 +93,7 @@ switch action
                 % get gain and base for each signal
             elseif i > 5 && i <= 5 + info.signals
                 gain = findtextbetween('ECG	', '	', line);
-                base = findtextbetween([gain(end),'	'], '	mV', line);
+                base = findtextbetween([gain(end-1:end),'	'], '	mV', line);
                 %disp(str2num(findtextbetween('ECG	', '	', line)));
                 info.gain = [info.gain, str2num(gain)];
                 info.base = [info.base, str2num(base)];
