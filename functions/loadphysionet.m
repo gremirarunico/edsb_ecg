@@ -41,9 +41,9 @@
 % Type seleziona il tipo di dato e può essere ecg per caricare i battiti
 function [dataout, info] = loadphysionet(action, name)
 % dummy definitions
-path = "physionetdata/";
-suffixData = "_data.txt";
-suffixDataMat = "_data.mat";
+path = 'physionetdata/';
+suffixData = '_data.txt';
+suffixDataMat = '_data.mat';
 suffixDatalog = '_datalog.txt';
 suffixAtr = '.atr.txt';
 suffixHea = '.hea.txt';
