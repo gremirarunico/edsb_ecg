@@ -25,18 +25,25 @@
 % * info.exit stato di uscita della funzione, 0 se tutto ok, 1 se errore
 % * info.error in caso di errore è definita, fornisce l'errore
 
-% per azione ecg
+% per azione qrs
 % * dataout.sample array of int: sample considered
-% * dataout.beat array of char: type of beat
-% * info.date(x,:) string related to x^th beat indicated date sample
-% * info.time(x,:) string related to x^th beat indicated time sample
+% * dataout.beat array of string: type of beat
+% * info.date array string related to beat indicated date sample
+% * info.time array string related to beat indicated time sample
+
+% per azione atr
+% * dataout.sample array of int: sample considered
+% * dataout.beat array of string: type of beat
+% * dataout.aux array of string: additional info about type of beat
+% * info.date array string related to beat indicated date sample
+% * info.time array string related to beat indicated time sample
 
 % Type seleziona il tipo di dato e può essere ecg per caricare i battiti
 function [dataout, info] = loadphysionet(action, name)
 % dummy definitions
-path = 'physionetdata/';
-suffixData = '_data.txt';
-suffixDataMat = '_data.mat';
+path = "physionetdata/";
+suffixData = "_data.txt";
+suffixDataMat = "_data.mat";
 suffixDatalog = '_datalog.txt';
 suffixAtr = '.atr.txt';
 suffixHea = '.hea.txt';
