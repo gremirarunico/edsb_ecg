@@ -7,4 +7,4 @@ clc
 
 %
 [points, attributes] = loadphysionet('ecg', '207');
-[gold, extras] = loadphysionet('qrs', '207');
+[gold, extras] = loadphysionet('atr', '207');
