@@ -46,6 +46,7 @@ suffixData = '_data.txt';
 suffixDataMat = '_data.mat';
 suffixDatalog = '_datalog.txt';
 suffixAtr = '.atr.txt';
+suffixAtrMat = '.atr.mat';
 suffixHea = '.hea.txt';
 suffixQrs = '.qrs.txt';
 
@@ -119,7 +120,7 @@ switch action
             line = fgets(fLog);
             dataout = zeros(info.totalsamples, info.signals);
             i = 0; % iterator for data check
-            last = info.signals + 1; % end term of dataline (don't use end to overtime)
+            %last = info.signals + 1; % end term of dataline (don't use end to overtime)
             while(line ~= -1)
                 dataline = extractNumFromStr(line);
                 if (i ~= dataline(1))
@@ -142,7 +143,6 @@ switch action
             end
             close(wbar);
             
-            %TODO convert dataout in mV using gains
             
             disp('Saving data as a mat file');
             save([path, name, suffixDataMat],'dataout');
@@ -152,72 +152,88 @@ switch action
             info.error = 0;
             % per ottenere l'uscita in mV fare (sample - base)/gain
         end
+        %convert dataout in mV using gains
+%          [lines, rows] = size(dataout);
+%          for row = 1:rows
+%              for line = 1:lines
+%                  dataout(line, row) = (dataout(line, row) - info.base(row))/info.gain(row);
+%              end
+%          end
         
     case 'atr'
-        % load log file
-        [fLog, fLogerr] = fopen([path, name, suffixAtr], 'r');
-        % If file not found return error
-        if not(isempty(fLogerr)) && (strcmp(fLogerr, 'No such file or directory'))
-            dataout = 0;
-            info.exit = 1;
-            info.error = 'No such file or directory';
-            return;
-        end
-        
-        % get file lines
-        lines = 0;
-        while fgetl(fLog)~=-1
-            lines = lines + 1;
-        end
-        lines = lines - 2; %last line is empty and first is header
-        %disp(lines);
-        
-        frewind(fLog);
-        
-        % load data
-        fgets(fLog); % i can miss first line because there is the header
-        line = fgets(fLog);
-        wbar = waitbar(0, 'Waiting, loading qrs from txt');
-        
-        info.time = strings(lines, 1);
-        info.date = strings(lines, 1);
-        dataout.sample = zeros(lines, 1);
-        dataout.beat = strings(lines, 1);
-        dataout.aux = strings(lines, 1);
-        i = 0;
-        oldpercent = 0;
-        while(line ~= -1)
-            i = i+1;
-            percent = round(i/lines*100);
-            if oldpercent ~= percent
-                oldpercent = percent;
-                waitbar(percent/100,wbar,sprintf('Processing your data from txt... %d%%', percent));
-            end
-            splitted = split(line);
-            time = cell2mat(splitted(1));
-            info.time(i) = time(2:end);
-            
-            date = cell2mat(splitted(2));
-            info.date(i) = date(1:end-1);
-            
-            dataout.sample(i) = str2num(cell2mat(splitted(3)));
-            
-            dataout.beat(i) = cell2mat(splitted(4));
-            
-            % extract aux
-            if cell2mat(splitted(8)) ~= 0x0
-                if length(cell2mat(splitted(8))) == 1
-                    dataout.aux(i) = cell2mat(splitted(9));
-                else
-                    dataout.aux(i) = cell2mat(splitted(8));
-                    
-                end
+        % if cached load it
+        if isfile([path, name, suffixAtrMat])
+            %disp('Found cached data, loading it...');
+            load([path, name, suffixAtrMat])
+        % else i have to laod it form a textfile, it will be a bit slow :(
+        else
+            % load log file
+            [fLog, fLogerr] = fopen([path, name, suffixAtr], 'r');
+            % If file not found return error
+            if not(isempty(fLogerr)) && (strcmp(fLogerr, 'No such file or directory'))
+                dataout = 0;
+                info.exit = 1;
+                info.error = 'No such file or directory';
+                return;
             end
             
+            % get file lines
+            lines = 0;
+            while fgetl(fLog)~=-1
+                lines = lines + 1;
+            end
+            lines = lines - 2; %last line is empty and first is header
+            %disp(lines);
+            
+            frewind(fLog);
+            
+            % load data
+            fgets(fLog); % i can miss first line because there is the header
             line = fgets(fLog);
+            wbar = waitbar(0, 'Waiting, loading qrs from txt');
+            
+            info.time = strings(lines, 1);
+            info.date = strings(lines, 1);
+            dataout.sample = zeros(lines, 1);
+            dataout.beat = strings(lines, 1);
+            dataout.aux = strings(lines, 1);
+            i = 1;
+            oldpercent = 0;
+            while(line ~= -1)
+                
+                percent = round(i/lines*100);
+                if oldpercent ~= percent
+                    oldpercent = percent;
+                    waitbar(percent/100,wbar,sprintf('Processing your data from txt... %d%%', percent));
+                end
+                splitted = split(line);
+                time = cell2mat(splitted(1));
+                info.time(i) = time(2:end);
+                
+                date = cell2mat(splitted(2));
+                info.date(i) = date(1:end-1);
+                
+                dataout.sample(i) = str2num(cell2mat(splitted(3))) + 1; %+1 is needed because in matlab matrix strart countin form 1 and not 0
+                
+                dataout.beat(i) = cell2mat(splitted(4));
+                
+                % extract aux
+                if cell2mat(splitted(8)) ~= 0x0
+                    if length(cell2mat(splitted(8))) == 1
+                        dataout.aux(i) = cell2mat(splitted(9));
+                    else
+                        dataout.aux(i) = cell2mat(splitted(8));
+                        
+                    end
+                end
+                
+                line = fgets(fLog);
+                
+                i = i+1;
+            end
+            close(wbar);
+            save([path, name, suffixAtrMat], 'dataout', 'info');
         end
-        close(wbar);
-        
         info.exit = 0;
         info.error = 0;
         
