@@ -1,6 +1,7 @@
 # MACOS
 *.DS_Store
 physionetdata/*
+!physionetdata/README.txt
 *.bz2
 extra/
 mcode/
