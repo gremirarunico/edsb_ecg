@@ -135,7 +135,7 @@ switch action
                 percent = round(dataline(1)/info.totalsamples, 2);
                 if percent ~= oldpercent
                     oldpercent = percent;
-                    waitbar(percent,wbar,sprintf('Processing your QRS data from txt... %d%%', round(percent*100)));
+                    waitbar(percent,wbar,sprintf('Processing your ECG samples from txt... %d%%', round(percent*100)));
                 end
                 
                 line = fgets(fLog);
@@ -190,7 +190,7 @@ switch action
             % load data
             fgets(fLog); % i can miss first line because there is the header
             line = fgets(fLog);
-            wbar = waitbar(0, 'Waiting, loading qrs from txt');
+            wbar = waitbar(0, 'Waiting, loading atr from txt');
             
             info.time = strings(lines, 1);
             info.date = strings(lines, 1);
@@ -204,7 +204,7 @@ switch action
                 percent = round(i/lines*100);
                 if oldpercent ~= percent
                     oldpercent = percent;
-                    waitbar(percent/100,wbar,sprintf('Processing your data from txt... %d%%', percent));
+                    waitbar(percent/100,wbar,sprintf('Processing your ATR data from txt... %d%%', percent));
                 end
                 splitted = split(line);
                 time = cell2mat(splitted(1));
@@ -275,7 +275,7 @@ switch action
             percent = round(i/lines*100);
             if oldpercent ~= percent
                 oldpercent = percent;
-                waitbar(percent/100,wbar,sprintf('Processing your data from txt... %d%%', percent));
+                waitbar(percent/100,wbar,sprintf('Processing your QRS data from txt... %d%%', percent));
             end
             splitted = split(line);
             time = cell2mat(splitted(1));
