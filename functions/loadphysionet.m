@@ -153,12 +153,12 @@ switch action
             % per ottenere l'uscita in mV fare (sample - base)/gain
         end
         %convert dataout in mV using gains
-%          [lines, rows] = size(dataout);
-%          for row = 1:rows
-%              for line = 1:lines
-%                  dataout(line, row) = (dataout(line, row) - info.base(row))/info.gain(row);
-%              end
-%          end
+          [lines, rows] = size(dataout);
+          for row = 1:rows
+              for line = 1:lines
+                  dataout(line, row) = (dataout(line, row) - info.base(row))/info.gain(row);
+              end
+          end
         
     case 'atr'
         % if cached load it
