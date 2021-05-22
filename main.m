@@ -6,30 +6,44 @@ clear all
 close all
 clc
 
-%
+% ottengo i dati da phisionet
 [points, attributes] = loadphysionet('ecg', '118');
 [gold, extras] = loadphysionet('atr', '118');
 
+% plot physion
 plotphysionet(points,attributes,gold,extras);
 
-% 
-x1 = points(:,1);
-samplingFreq = attributes.samplingFrequency;
-t = [0 : 1/samplingFreq : attributes.totalsamples/samplingFreq]';
-ann = gold.sample;
-ecg1 = zeros(size(t,1), 1);
-ecg1(1:1:size(x1,1)) = x1;
-x = ecg1;
+% costruisco il template
+templateSize = 11;
+templateMatrix = multiInputTemplateBuilder(['118'; '200'], 100, 2000, 11);
+%templateMatrix = templateDataSelector(points(:,1), gold.sample, 100, 2000, 11);
+%templateMatrix = templateDataSelector(points(:,1), gold.sample, 100, 200, templateSize);
+template = mean(templateMatrix);
 
+% algoritmo di riconoscimento
+%[annotations, c] = crosscorrelazione(points(:,1), mean(templateMatrix), 0.9);
+%[annotations, c] = templateL2Norm(points(:,1), template, -0.015);
+annotations = fradenNewman(points(:,1), 0.001, 0.2);
 
- for i=1:14
-     th1=0.05*i*max(x);
-     [r_s]= AlgoritmoFradenNewman(t,x,ann, th1);
-     [TP(i),FP(i),TN(i),FN(i),Sens(i),Spec(i),Acc(i)]=evaluationECGsignal(ann,x,t,samplingFreq,'118', th1)
- end
- [r_s]= AlgoritmoFradenNewman(t,x,ann);
-  [TP,FP,TN,FN,Sens,Spec,Acc]=evaluationECGsignal(ann,x,t,samplingFreq,'118',th1)
-minFN = min(FN);
+% calcolo contingenza
+[FN, FP, TP, TN] = contingency(gold.sample, annotations, attributes.totalsamples)
 
+% calcolo rapporto segnale rumore
+SNR = moody(points(:,1), gold.sample, attributes.samplingFrequency)
 
-% % 
+% confronto riconoscimento algoritmo vs medico
+%plot(((1:attributes.totalsamples)/attributes.samplingFrequency), c, '-');
+%plotComparison(points(:,1), attributes, gold, annotations, c);
+plotComparison(points(:,1), attributes, gold, annotations);
+
+% disegno del template
+figure;
+hold on
+for i = 1:size(templateMatrix, 1)
+    plot(templateMatrix(i,:));
+end
+plot(mean(templateMatrix), 'k', 'LineWidth',5);
+plot(mean(templateMatrix)+3*sqrt(var(templateMatrix)), 'r', 'LineWidth',5);
+plot(mean(templateMatrix)-3*sqrt(var(templateMatrix)), 'r', 'LineWidth',5);
+xline(templateSize/2+1);
+

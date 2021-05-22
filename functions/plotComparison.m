@@ -26,7 +26,9 @@ plot(((NSamples)/attributes.samplingFrequency)', points(NSamples), '.r');
 % aggiungo un punto verde sull'annotazione dei QRS dell'algoritmo
 plot(((myAnnotations)/attributes.samplingFrequency)', points(myAnnotations), 'og');
 
-plot(((1:length(d))/attributes.samplingFrequency), d);
+if exist('d', 'var')
+    plot(((1:length(d))/attributes.samplingFrequency), d);
+end
 
 end
 
