@@ -14,26 +14,37 @@ function [FN, FP, TP, TN] = contingency(gold, annotations, points)
     %vettore campioni delle annotazioni
     binaryAnn = zeros(points + halfWindowTolerance, 1);
     
-    % riempio il vettore delle annotazioni
+    % riempio il vettore delle annotazioni. Metto un 1 quando c'è una
+    % annotazione dell'algoritmo da confrontare
     binaryAnn(annotations) = 1;
     
     FN = 0;
     FP = 0;
     TP = 0;
     % faccio i confronti
-    j = 0;
     for i = 1:length(gold)
+        % finestra dell'intervallo di tolleranza
         indexWindow = (gold(i)-halfWindowTolerance : gold(i) + halfWindowTolerance);
+        % il numero di battiti nella finestra è pari alla somma degli uno
+        % che ci sono nella finestra
         beatsFound = sum(binaryAnn(indexWindow));
-        %binaryAnn(indexWindow) = zeros(length(indexWindow), 1);
-        % ne dovevo trovare almeno 1
+        % azzero la finestra, così potrò contare i falsi positivi
+        % aggiuntivi che non si trovano in alcuna finestra individuata dal
+        % medico
+        binaryAnn(indexWindow) = zeros(length(indexWindow), 1);
+        % ne dovevo trovare almeno 1 di battito, se non lo trovo è un falso
+        % negativo
         if(beatsFound == 0)
             FN = FN + 1;
+        % altrimenti c'è almeno un battito (quindi sicuramente un vero
+        % negativo e se ce ne sono di più saranno altri falsi positivi
         else
             TP = TP + 1;
             FP = FP + (beatsFound - 1);
         end
     end
+    % aggiungo ai falsi positivi altri elementi trovati che non sono stati
+    % trovati nella finestra
     FP = FP + sum(binaryAnn);
     
     TN = points - TP - FN - FP;
