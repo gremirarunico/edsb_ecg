@@ -3,5 +3,6 @@
 physionetdata/*
 !physionetdata/README.txt
 *.bz2
+*.asv
 extra/
 mcode/
