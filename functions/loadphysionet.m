@@ -7,32 +7,35 @@
 % ecg
 % atr
 % qrs
-% Uscita
+% Uscita:
 % dataout e info
 % Questi dati si differenziano a seconda del tipo di azione
-% per azione ecg
-% dataout è una array con il valore dei battiti, una colonna per segnale
+
+% per azione ecg (segnale acquisito)
+% dataout è una array con il valore dell'ampiezza in V dei battiti, una colonna per segnale
 % una riga per campione.
 % info è una struttura dati contenenti varie informazioni sul segnale:
 % * info.signals, numero di segnali
 % * info.totalsamples numero di campioni per segnale
-% * info.timestart when registration started
-% * info.date date recording
-% * info.duration duration recording
+% * info.timestart matrice contentenente l'ora di acquisizione di ciascun
+%   campione
+% * info.date data della registrazione
+% * info.duration durata temporale della registrazione (stringa)
 % * info.samplingFrequency frequenza di campionamento del segnale
 % * info.gain guadagno del segnale, è un array visto che vale per ogni segnale
-% * info.base linea base del segnale, come gain
+% * info.base offset in ampiezza del segnale (array)
 % * info.exit stato di uscita della funzione, 0 se tutto ok, 1 se errore
 % * info.error in caso di errore è definita, fornisce l'errore
 
-% per azione qrs
-% * dataout.sample array of int: sample considered
-% * dataout.beat array of string: type of beat
-% * info.date array string related to beat indicated date sample
-% * info.time array string related to beat indicated time sample
+% per azione qrs (annotazioni con algoritmo physionet)
+% * dataout.sample array of int: campioni QRS (algoritmo physionet)
+% * dataout.beat array of string: array contentente il tipo di battito
+%   (algoritmo physionet)
+% * info.date data di ciascun battito (algoritmo physionet)
+% * info.time (array string) riferimento temporale di ciascun battito 
 
-% per azione atr
-% * dataout.sample array of int: sample considered
+% per azione atr (annotazioni esperti)
+% * dataout.sample array of int: campioni QRS (annotazioni esperti)
 % * dataout.beat array of string: type of beat
 % * dataout.aux array of string: additional info about type of beat
 % * info.date array string related to beat indicated date sample
