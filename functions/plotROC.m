@@ -11,8 +11,10 @@ else
 end
 
 % ROC plot
-plot(1-Spec, Sens)
+plot(1-Spec, Sens, 'or', 'MarkerFaceColor', 'r');
 xlim([0 1])
 ylim([0 1])
+xlabel("1 - Spec");
+ylabel("Sens");
 end
 
