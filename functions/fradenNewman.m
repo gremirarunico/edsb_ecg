@@ -6,9 +6,7 @@ function annotations=fradenNewman(signal, th1, th2)
     if ~exist('th1', 'var')
         th1=0.4*max(signal);
     else
-        disp(th1)
         th1=th1*max(signal);
-        disp(th1)
     end
 
     if ~exist('th2', 'var')
