@@ -1,6 +1,6 @@
 % detectionEvaluation.m
 % fornisce quanto "c'ha preso" l'algoritmo
-function [FN, FP, TP, TN] = contingency(gold, annotations, points)
+function [FN, FP, TP, TN, Sens, Spec] = contingency(gold, annotations, points)
     % trovo la larghezza della finestra di tolleranza a partire dalle
     % annotazioni del medico. Mi prendo la finestra più piccola che
     % contenga un solo QRS secondo il medico.
@@ -48,4 +48,7 @@ function [FN, FP, TP, TN] = contingency(gold, annotations, points)
     FP = FP + sum(binaryAnn);
     
     TN = points - TP - FN - FP;
+    
+    Sens=TP/(TP+FN);
+    Spec=TN/(TN+FP);
 end
