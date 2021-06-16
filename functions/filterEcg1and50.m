@@ -1,0 +1,9 @@
+function sigout = filterEcg1and50(sigin, sf)
+    bpFilt = designfilt('bandpassiir','FilterOrder',20,...
+    'DesignMethod','butter', ...
+    'HalfPowerFrequency1',1,'HalfPowerFrequency2',50,...
+    'SampleRate',sf);
+
+    sigout = filtfilt(bpFilt, sigin);
+end
+
