@@ -1,6 +1,6 @@
 % detectionEvaluation.m
 % fornisce quanto "c'ha preso" l'algoritmo
-function [FN, FP, TP, TN, Sens, Spec] = contingency(gold, annotations, points)
+function [FN, FP, TP, TN, Sens, Spec, Acc] = contingency(gold, annotations, points)
     % trovo la larghezza della finestra di tolleranza a partire dalle
     % annotazioni del medico. Mi prendo la finestra più piccola che
     % contenga un solo QRS secondo il medico.
@@ -25,9 +25,17 @@ function [FN, FP, TP, TN, Sens, Spec] = contingency(gold, annotations, points)
     for i = 1:length(gold)
         % finestra dell'intervallo di tolleranza
         indexWindow = (gold(i)-halfWindowTolerance : gold(i) + halfWindowTolerance);
+        
+        % controllo che non ci siano indici negativi (finestra troppo
+        % vicina a sinistra) per correggere errore sequenza 64
+        if(sum(indexWindow <=1))
+            indexWindow = indexWindow(sum(indexWindow <=1) : end);
+        end
+        
         % il numero di battiti nella finestra è pari alla somma degli uno
         % che ci sono nella finestra
         beatsFound = sum(binaryAnn(indexWindow));
+
         % azzero la finestra, così potrò contare i falsi positivi
         % aggiuntivi che non si trovano in alcuna finestra individuata dal
         % medico
@@ -51,4 +59,5 @@ function [FN, FP, TP, TN, Sens, Spec] = contingency(gold, annotations, points)
     
     Sens=TP/(TP+FN);
     Spec=TN/(TN+FP);
+    Acc = (TP+TN)/(TP+TN+FP+FN);
 end

@@ -25,6 +25,8 @@ end
 
 GammaSigma = [zeros(1, (D-1)/2), GammaSigma, zeros(1, (D-1)/2)];
 
+% plot(GammaSigma);
+
 [peaksValue, annotations] = findpeaks(GammaSigma, 'MinPeakHeight', threshold);
 end
 
