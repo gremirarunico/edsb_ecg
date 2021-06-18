@@ -10,12 +10,7 @@ clc
 [points, attributes] = loadphysionet('ecg', '118');
 [gold, extras] = loadphysionet('atr', '118');
 
-
-bpFilt = designfilt('bandpassiir','FilterOrder',20,'HalfPowerFrequency1',1,'HalfPowerFrequency2',50,'SampleRate',attributes.samplingFrequency);
-%fvtool(bpFilt)
-
-filtredSig = filtfilt(bpFilt, points(:,1));
-filtredSig(1:6000) = zeros(6000,1);
+filtredSig = filterEcg1and50instable(points(:,1), attributes.samplingFrequency);
 
 i=0;
 j=0;
