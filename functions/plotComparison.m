@@ -1,8 +1,13 @@
 % plotphhisionet.m (c) Marco
 % Disegna un plot da physionet, fornire
 % punti, attributi, gold standard e valori aggiuntivi
-function plotComparison(points, attributes, gold,myAnnotations, d)
-figure
+function plotComparison(points, attributes, gold,myAnnotations, d, mytitle)
+if exist('mytitle', 'var')
+    figure('Name',mytitle,'NumberTitle','off');
+    title(mytitle);
+else
+    figure
+end
 hold on
 
 % Disegna i grafici delle 2 derivazione x,y con x base dei tempi (in
@@ -28,6 +33,10 @@ plot(((myAnnotations)/attributes.samplingFrequency)', points(myAnnotations), 'og
 
 if exist('d', 'var')
     plot(((1:length(d))/attributes.samplingFrequency), d);
+    
+    legend("Signal", "Gold standard", "This algorithm", "Metric");
+else
+    legend("Signal", "Gold standard", "This algorithm");
 end
 
 end
