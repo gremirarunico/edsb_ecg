@@ -2,6 +2,14 @@ function plotROC(TP,FP,TN,FN,newPlot)
 Sens=TP./(TP+FN);
 Spec=TN./(TN+FP);
 
+if sum(isnan(Sens))
+    Sens(find(isnan(Sens))) = 1;
+end
+
+if sum(isnan(Spec))
+    Spec(find(isnan(Spec))) = 1;
+end
+
 
 % new plot?
 if newPlot
