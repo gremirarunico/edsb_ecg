@@ -13,7 +13,7 @@ sampleStart = 100;
 nWindows = 200; 
 templateSize = 7; %valore ottimizzato 
 sogliaGammaSigma = 0.7750; %valore ottimizzato
-templateMatrix = multiInputTemplateBuilder(["118"; "105"; "203"; "204"], sampleStart, nWindows, templateSize, 1, 1);
+templateMatrix = multiInputTemplateBuilder(["118"; "116"; "113"; "32"; "200"], sampleStart, nWindows, templateSize, 1, 1);
 template = mean(templateMatrix);
 
 final = length(allDatasets);

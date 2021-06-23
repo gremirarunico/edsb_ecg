@@ -38,7 +38,7 @@ oldPercent = -1;
 percentCount = 0;
 for i=1:13
     templateSize = 3+2*i;% numeri dispari da 5 a 21
-    templateMatrix = multiInputTemplateBuilder(["118"; "105"; "203"; "204"], sampleStart, nWindows, templateSize, 1, 1);
+    templateMatrix = multiInputTemplateBuilder(["118"; "116"; "113"; "32"; "200"], sampleStart, nWindows, templateSize, 1, 1);
     template = mean(templateMatrix);
     
     for j=1:11
