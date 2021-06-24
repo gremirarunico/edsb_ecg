@@ -5,8 +5,12 @@ clear all
 close all
 clc
 
-[points, attributes] = loadphysionet('ecg', '58');
-[gold, extras] = loadphysionet('atr', '58');
+[points, attributes] = loadphysionet('ecg', '00');
+[gold, extras] = loadphysionet('atr', '00');
+
+%plot(((1:attributes.totalsamples)/attributes.samplingFrequency)', points(:,1), '-');
+hold on
+
 
 % battiti normali
 %normalBeatsSamples = gold.sample(find(gold.beat=='N'));
@@ -21,28 +25,38 @@ sampEntropy = zeros(1, fix(length(normalBeatsSamples)/L)+1);
 afibInWindow = zeros(1, fix(length(normalBeatsSamples)/L)+1);
 
 index = 1;
-for i = 1:fix(length(normalBeatsSamples)/L)
-    [x, y, x1, x2, SD1, SD2, S(i)] = poincarePlot(normalBeatsSamples(index:index+L), attributes.samplingFrequency, 0);
-    
+%for i = 1:fix(length(normalBeatsSamples)/L)
+%for i = 21:23
+for i = 1:3
+    [x, y, x1, x2, SD1, SD2, S(i)] = poincarePlot(normalBeatsSamples(index:index+L), attributes.samplingFrequency, 1);
+    xlim([0,2])
+    ylim([0,2])
     RRs = x;
     RRs(end) = y(end);
     
     sampEntropy(i) = sampleEntropy(2, 0.2 * std(RRs), RRs);
     
+    %clf
+    
     % indice dei battiti, di L in L
     index = index + L;
+    
+    if((S(i) > 0.0085) & (sampEntropy(i) > 1.22))
+        disp(i);
+    end
 end
+return
 % considero anche l'ultima finestra (storpia)
 %[x, y, x1, x2, SD1, SD2, S(i+1)] = poincarePlot(normalBeatsSamples(index+L:end), attributes.samplingFrequency, 0);
 
 for i = 1:fix(length(normalBeatsSamples)/L)
-        line([normalBeatsSamples(i*L-L+1)/attributes.samplingFrequency, normalBeatsSamples(i*L-1)/attributes.samplingFrequency],[S(i),S(i)], 'Color', 'cyan', 'LineWidth', 1);
-        line([normalBeatsSamples(i*L-L+1)/attributes.samplingFrequency, normalBeatsSamples(i*L-1)/attributes.samplingFrequency],[sampEntropy(i),sampEntropy(i)], 'Color', 'magenta', 'LineWidth', 1);
+        %line([normalBeatsSamples(i*L-L+1)/attributes.samplingFrequency, normalBeatsSamples(i*L-1)/attributes.samplingFrequency],[S(i),S(i)], 'Color', 'cyan', 'LineWidth', 1);
+        %line([normalBeatsSamples(i*L-L+1)/attributes.samplingFrequency, normalBeatsSamples(i*L-1)/attributes.samplingFrequency],[sampEntropy(i),sampEntropy(i)], 'Color', 'magenta', 'LineWidth', 1);
 end
-yline(0.01, 'Color', 'cyan');
-yline(1.2, 'Color', 'magenta');
+%yline(0.01, 'Color', 'cyan');
+%yline(1.2, 'Color', 'magenta');
 
-afibInWindow = (S > 0.01) & (sampEntropy > 1.2);
+afibInWindow = (S > 0.0085) & (sampEntropy > 1.22);
 
 annotations = zeros(1, length(gold.sample));
 
@@ -73,17 +87,19 @@ y1 = 2;
 y2 = max(points(:,2));
 for i = 2:length(pIndex)
     if(labels(i-1)=="(AFIB")
-        line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[3,3], 'Color', 'red', 'LineWidth', 10);
+        line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[1.25,1.25], 'Color', 'green', 'LineWidth', 10);
     end
-    ann = line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[y1,y1]);
-    ann.Marker = 'o';
-    text(PSamples(i-1)/attributes.samplingFrequency, y1, labels(i-1));
+    %ann = line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[y1,y1]);
+    %ann.Marker = 'o';
+    %text(PSamples(i-1)/attributes.samplingFrequency, y1, labels(i-1));
 end
 
 if(labels(i)=="(AFIB")
-        line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[3,3], 'Color', 'red', 'LineWidth', 10);
+        line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[1.25,1.25], 'Color', 'green', 'LineWidth', 10);
 end
-line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[y1,y1]);
-text(PSamples(end)/attributes.samplingFrequency, y1, labels(end));
 
-ylim([-3,3]);
+%line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[y1,y1]);
+%text(PSamples(end)/attributes.samplingFrequency, y1, labels(end));
+
+ylim([-1,4]);
+

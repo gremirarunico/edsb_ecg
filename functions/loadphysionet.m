@@ -32,7 +32,7 @@
 % * dataout.beat array of string: array contentente il tipo di battito
 %   (algoritmo physionet)
 % * info.date data di ciascun battito (algoritmo physionet)
-% * info.time (array string) riferimento temporale di ciascun battito 
+% * info.time (array string) riferimento temporale di ciascun battito
 
 % per azione atr (annotazioni esperti)
 % * dataout.sample array of int: campioni QRS (annotazioni esperti)
@@ -66,6 +66,7 @@ switch action
         % get files info
         line = 1;
         i = 0;
+        
         while(line ~= -1)
             i = i + 1;
             line = fgets(fLog);
@@ -97,6 +98,9 @@ switch action
                 % get gain and base for each signal
             elseif i > 5 && i <= 5 + info.signals
                 gain = findtextbetween('ECG	', '	', line);
+                if isempty(gain) % workround
+                    gain = findtextbetween(['ECG', convertStringsToChars(int2str(i-5)) , '	'], '	', line);
+                end
                 base = findtextbetween([gain(end-1:end),'	'], '	mV', line);
                 %disp(str2num(findtextbetween('ECG	', '	', line)));
                 info.gain = [info.gain, str2num(gain)];
@@ -156,19 +160,19 @@ switch action
             % per ottenere l'uscita in mV fare (sample - base)/gain
         end
         %convert dataout in mV using gains
-          [lines, rows] = size(dataout);
-          for row = 1:rows
-              for line = 1:lines
-                  dataout(line, row) = (dataout(line, row) - info.base(row))/info.gain(row);
-              end
-          end
+        [lines, rows] = size(dataout);
+        for row = 1:rows
+            for line = 1:lines
+                dataout(line, row) = (dataout(line, row) - info.base(row))/info.gain(row);
+            end
+        end
         
     case 'atr'
         % if cached load it
         if isfile([path, name, suffixAtrMat])
             %disp('Found cached data, loading it...');
             load([path, name, suffixAtrMat])
-        % else i have to laod it form a textfile, it will be a bit slow :(
+            % else i have to laod it form a textfile, it will be a bit slow :(
         else
             % load log file
             [fLog, fLogerr] = fopen([path, name, suffixAtr], 'r');
@@ -211,24 +215,43 @@ switch action
                 end
                 splitted = split(line);
                 time = cell2mat(splitted(1));
-                info.time(i) = time(2:end);
-                
-                date = cell2mat(splitted(2));
-                info.date(i) = date(1:end-1);
-                
-                dataout.sample(i) = str2num(cell2mat(splitted(3))) + 1; %+1 is needed because in matlab matrix strart countin form 1 and not 0
-                
-                dataout.beat(i) = cell2mat(splitted(4));
-                
-                % extract aux
-                if cell2mat(splitted(8)) ~= 0x0
-                    if length(cell2mat(splitted(8))) == 1
-                        dataout.aux(i) = cell2mat(splitted(9));
-                    else
-                        dataout.aux(i) = cell2mat(splitted(8));
-                        
+                % se non normale
+                if time(end) == ']'
+                    info.time(i) = time(2:end-1);
+                    
+                    dataout.sample(i) = str2num(cell2mat(splitted(2))) + 1; %+1 is needed because in matlab matrix strart countin form 1 and not 0
+                    
+                    dataout.beat(i) = cell2mat(splitted(3));
+                    
+                    % extract aux
+                    if cell2mat(splitted(7)) ~= 0x0
+                        if length(cell2mat(splitted(7))) == 1
+                            dataout.aux(i) = cell2mat(splitted(8));
+                        else
+                            dataout.aux(i) = cell2mat(splitted(7));
+                            
+                        end
+                    end
+                else
+                    info.time(i) = time(2:end);
+                    
+                    date = cell2mat(splitted(2));
+                    info.date(i) = date(1:end-1);
+                    dataout.sample(i) = str2num(cell2mat(splitted(3))) + 1; %+1 is needed because in matlab matrix strart countin form 1 and not 0
+                    
+                    dataout.beat(i) = cell2mat(splitted(4));
+                    
+                    % extract aux
+                    if cell2mat(splitted(8)) ~= 0x0
+                        if length(cell2mat(splitted(8))) == 1
+                            dataout.aux(i) = cell2mat(splitted(9));
+                        else
+                            dataout.aux(i) = cell2mat(splitted(8));
+                            
+                        end
                     end
                 end
+                
                 
                 line = fgets(fLog);
                 
@@ -240,7 +263,7 @@ switch action
         info.exit = 0;
         info.error = 0;
         
-    % TODO: cache to accelerate
+        % TODO: cache to accelerate
     case 'qrs'
         % load log file
         [fLog, fLogerr] = fopen([path, name, suffixQrs], 'r');

@@ -7,7 +7,7 @@ clear all
 clc
 
 % ottengo i dati da phisionet
-[points, attributes] = loadphysionet('ecg', '45');
-[gold, extras] = loadphysionet('atr', '45');
+[points, attributes] = loadphysionet('ecg', '16539');
+[gold, extras] = loadphysionet('atr', '16539');
 
 plotphysionet(points,attributes,gold,extras);
