@@ -62,10 +62,6 @@ end
 
 [FN, FP, TP, TN, Sens, Spec, Acc] = afibContingency(gold, annotations)
 
-% poor rusco
-
-
-
 
 % trovo l'indice di inizio o fine gruppo battiti (segnato con +)
 pIndex = find(gold.beat=='+');
