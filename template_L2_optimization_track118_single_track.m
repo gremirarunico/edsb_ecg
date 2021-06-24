@@ -2,9 +2,6 @@
 addpath './functions'
 
 % Reset workspace
-clear all
-close all
-clc
 
 allDatasets = ["00"; "01"; "03"; "05"; "06"; "07"; "08"; "10"; "100"; "101"; "102"; "103"; "104"; "105"; "11"; "110"; "111"; "112"; "113"; "114"; "115"; "116"; "117"; "118"; "119"; "12"; "120"; "121"; "122"; "13"; "15"; "16"; "17"; "18"; "19"; "20"; "200"; "201"; "202"; "203"; "204"; "205"; "206"; "207"; "208"; "21"; "22"; "23"; "24"; "25"; "26"; "28"; "30"; "32"; "33"; "34"; "35"; "37"; "38"; "39"; "42"; "43"; "44"; "45"; "47"; "48"; "49"; "51"; "53"; "54"; "55"; "56"; "58"; "60"; "62"; "64"; "65"; "68"; "69"; "70"; "71"; "72"; "74"; "75"];
 
@@ -20,15 +17,15 @@ filtredSig = filterEcg1and50(points(:,1), attributes.samplingFrequency);
 sampleStart = 100;
 nWindows = 200;
 a = 9;
-b = 21;
+b = 40;
 % costruisco il template senza filtraggio aggiuntivo
-FN = zeros(a,b);
-FP = zeros(a,b);
-TP = zeros(a,b);
-TN = zeros(a,b);
-Sens = zeros(a,b);
-Spec = zeros(a,b);
-Acc = zeros(a,b);
+% FN = zeros(a,b);
+% FP = zeros(a,b);
+% TP = zeros(a,b);
+% TN = zeros(a,b);
+% Sens = zeros(a,b);
+% Spec = zeros(a,b);
+% Acc = zeros(a,b);
 
 totalRep = a*b;
 oldPercent = -1;
@@ -40,7 +37,7 @@ for i=1:a
     templateMatrix = (templateMatrix' ./ max(templateMatrix'))';
     template = mean(templateMatrix);
     
-    for j=1:b
+    for j=32:b
         percentCount = percentCount + 1;
         percent = round(percentCount/totalRep*100,2);
         if(oldPercent ~= percent)
