@@ -1,9 +1,21 @@
-% fornisce quanto "c'ha preso" l'algoritmo
+% funzione per calcolare la tabella di contingenza per l'algoritmo di
+% rilevazione della fibrillazione atriale.
+
+% Input:
+% - gold è la struttura contenente le annotazioni del gold standard
+% - annotations è il vettore dei tempi contenente le annotazioni
+%   dell'algoritmo AFIB
+
+% Output: FN, FP, TP, TN, sensibilità, specificità, accuratezza
 function [FN, FP, TP, TN, Sens, Spec, Acc] = afibContingency(gold, annotations)
 
-    % afibBeats array di uno per i battiti con fibrillazione atriale
+    % afibBeats contiene le annotazioni sui battiti AFIB del gold standard
+    % (1 ogni volta che il battito è AFIB)
     afibBeats = zeros(1, length(gold.sample));
     isAfib = 0;
+    
+    % quando in gold.aux compare "(AFIB" in afibBeats viene inserito un 1
+    % fintanto che non ritorna "(N"
     for i = 1:length(gold.aux)
         if (gold.aux(i) == "(AFIB")
             isAfib = 1;
@@ -22,7 +34,7 @@ function [FN, FP, TP, TN, Sens, Spec, Acc] = afibContingency(gold, annotations)
     FP = annotations & ~afibBeats;
     FN = ~annotations & afibBeats;
     
-    % somme
+    % si sommano tutti gli 1 per trovare il totale
     TP = sum(TP);
     TN = sum(TN);
     FP = sum(FP);
@@ -33,6 +45,9 @@ function [FN, FP, TP, TN, Sens, Spec, Acc] = afibContingency(gold, annotations)
     
     Acc = (TP+TN)/(TP+TN+FP+FN);
     
+    % nelle tracce in cui c'è solo AFIB, TN=0, FP=0 quindi Spec is NaN;
+    % nelle tracce in cui non c'è AFIB, TP=0, FN=0, quindi Sens is NaN.
+    % si corregge facendo in modo che quando non sono definite siano 100% 
     if sum(isnan(Sens))
         Sens(find(isnan(Sens))) = 1;
     end

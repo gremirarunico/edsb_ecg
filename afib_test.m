@@ -1,37 +1,42 @@
 addpath './functions'
 
+% Costruzione di alcuni grafici per l'interpretazione dei dati
+
 % Reset workspace
 clear all
 close all
 clc
 
+% caricamento dati
 [points, attributes] = loadphysionet('ecg', '00');
 [gold, extras] = loadphysionet('atr', '00');
 
 %plot(((1:attributes.totalsamples)/attributes.samplingFrequency)', points(:,1), '-');
 hold on
 
-
-% battiti normali
-%normalBeatsSamples = gold.sample(find(gold.beat=='N'));
+% battiti totali (annotazioni gold standard)
 normalBeatsSamples = gold.sample;
 
-% numero di battiti in una finestra
+% numero di intervalli RR in una finestra
 L = 128;
 
+% inizializzazione parametri algoritmo
 S = zeros(1, fix(length(normalBeatsSamples)/L)+1);
 sampEntropy = zeros(1, fix(length(normalBeatsSamples)/L)+1);
 
+% matrice annotazioni AFIB window per window
 afibInWindow = zeros(1, fix(length(normalBeatsSamples)/L)+1);
 
 index = 1;
-%for i = 1:fix(length(normalBeatsSamples)/L)
-%for i = 21:23
+
 for i = 1:3
+    % traccia il plot di Poincaré
     [x, y, x1, x2, SD1, SD2, S(i)] = poincarePlot(normalBeatsSamples(index:index+L), attributes.samplingFrequency, 1);
     xlim([0,2])
     ylim([0,2])
-    RRs = x;
+    % crea il vettore degli intervalli RR dagli output della funzione
+    % poincarePlot x e y (sono gli intervalli RR traslati di 1)
+    RRs = x; 
     RRs(end) = y(end);
     
     sampEntropy(i) = sampleEntropy(2, 0.2 * std(RRs), RRs);
@@ -69,11 +74,6 @@ for i = 1:length(afibInWindow)
 end
 
 [FN, FP, TP, TN, Sens, Spec, Acc] = afibContingency(gold, annotations)
-
-% poor rusco
-
-
-
 
 % trovo l'indice di inizio o fine gruppo battiti (segnato con +)
 pIndex = find(gold.beat=='+');
