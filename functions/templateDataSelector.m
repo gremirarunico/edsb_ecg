@@ -23,7 +23,20 @@ function dataTemplate = templateDataSelector(samples, beatIndex, startIndex, nWi
     % inizializzo uscita, matrice nWindows x windowLength
     dataTemplate = zeros(nWindows, windowLength);
     for i = 1:nWindows
-        dataTemplate(i,:) = samples(windowCentersIndex(i)-(windowLength-1)/2 : windowCentersIndex(i)+(windowLength-1)/2);
+        biggerWindowLength = windowLength + 2;
+        biggerDataTemplate = samples(windowCentersIndex(i)-(biggerWindowLength-1)/2 : windowCentersIndex(i)+(biggerWindowLength-1)/2);
+        l = biggerDataTemplate(fix(biggerWindowLength/2));
+        c = biggerDataTemplate(fix(biggerWindowLength/2)+1);
+        r = biggerDataTemplate(fix(biggerWindowLength/2)+2);
+        if(l>c)
+            dataTemplate(i,:) = biggerDataTemplate(1:end-2);
+        elseif(r>c)
+            dataTemplate(i,:) = biggerDataTemplate(3:end);
+        else
+            dataTemplate(i,:) = biggerDataTemplate(2:end-1);
+        end
+        %dataTemplate(i,:) = samples(windowCentersIndex(i)-(windowLength-1)/2 : windowCentersIndex(i)+(windowLength-1)/2);
+        %
         dataMean = mean(dataTemplate(i,:));
         
         dataTemplate(i,:) = dataTemplate(i,:) - dataMean;
