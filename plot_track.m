@@ -6,8 +6,10 @@ clear all
 %close all
 clc
 
+trk = '15';
+
 % ottengo i dati da phisionet
-[points, attributes] = loadphysionet('ecg', '16539');
-[gold, extras] = loadphysionet('atr', '16539');
+[points, attributes] = loadphysionet('ecg', trk);
+[gold, extras] = loadphysionet('atr', trk);
 
 plotphysionet(points,attributes,gold,extras);
