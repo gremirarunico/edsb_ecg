@@ -7,7 +7,8 @@
 % nWindows: numero di finestre da prelevare
 % windowLength: larghezza in campioni della finestra (in numero di
 % campioni) deve essere dispari.
-% @return matrice dei campioni finestrati per il template: in ogni riga una finestra
+% @return matrice dei campioni finestrati per il template: in ogni riga una
+% forma d'onda
 
 function dataTemplate = templateDataSelector(samples, beatIndex, startIndex, nWindows, windowLength)
     % se i campioni della finestra sono pari ne aggiungo uno (finestra
@@ -23,6 +24,9 @@ function dataTemplate = templateDataSelector(samples, beatIndex, startIndex, nWi
     % inizializzo uscita, matrice nWindows x windowLength
     dataTemplate = zeros(nWindows, windowLength);
     for i = 1:nWindows
+        % per assicurarsi che ciascuna forma d'onda in dataTemplate sia
+        % allineata al massimo si va a ricercare il massimo nei campioni
+        % precedente e successivo al campione centrale della finestra
         biggerWindowLength = windowLength + 2;
         biggerDataTemplate = samples(windowCentersIndex(i)-(biggerWindowLength-1)/2 : windowCentersIndex(i)+(biggerWindowLength-1)/2);
         l = biggerDataTemplate(fix(biggerWindowLength/2));
@@ -39,7 +43,7 @@ function dataTemplate = templateDataSelector(samples, beatIndex, startIndex, nWi
         %
         dataMean = mean(dataTemplate(i,:));
         
-        dataTemplate(i,:) = dataTemplate(i,:) - dataMean;
+        dataTemplate(i,:) = dataTemplate(i,:) - dataMean; 
         
     end
     
