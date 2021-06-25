@@ -7,9 +7,6 @@
 addpath './functions'
 
 % Reset workspace
-clear all
-close all
-clc
 
 % ottengo i dati da phisionet
 [points, attributes] = loadphysionet('ecg', '118');
@@ -23,15 +20,15 @@ filtredSig = filterEcg1and50(points(:,1), attributes.samplingFrequency);
 sampleStart = 100;
 nWindows = 200;
 a = 9;
-b = 21;
+b = 40;
 % costruisco il template senza filtraggio aggiuntivo
-FN = zeros(a,b);
-FP = zeros(a,b);
-TP = zeros(a,b);
-TN = zeros(a,b);
-Sens = zeros(a,b);
-Spec = zeros(a,b);
-Acc = zeros(a,b);
+% FN = zeros(a,b);
+% FP = zeros(a,b);
+% TP = zeros(a,b);
+% TN = zeros(a,b);
+% Sens = zeros(a,b);
+% Spec = zeros(a,b);
+% Acc = zeros(a,b);
 
 totalRep = a*b;
 oldPercent = -1;
@@ -43,7 +40,7 @@ for i=1:a
     templateMatrix = (templateMatrix' ./ max(templateMatrix'))';
     template = mean(templateMatrix);
     
-    for j=1:b
+    for j=32:b
         percentCount = percentCount + 1;
         percent = round(percentCount/totalRep*100,2);
         if(oldPercent ~= percent)
