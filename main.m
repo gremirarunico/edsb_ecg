@@ -7,12 +7,12 @@ close all
 clc
 
 % ottengo i dati da phisionet
-[points, attributes] = loadphysionet('ecg', '118');
-[gold, extras] = loadphysionet('atr', '118');
+[points, attributes] = loadphysionet('ecg', '105');
+[gold, extras] = loadphysionet('atr', '105');
 
 % plot physion
 plotphysionet(points,attributes,gold,extras);
-
+ return
 % costruisco il template
 templateSize = 11;
 templateMatrix = multiInputTemplateBuilder(['118'; '200'], 100, 2000, 11);

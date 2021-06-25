@@ -1,12 +1,15 @@
-% template_optimization.m ottimizzazione dell'algoritmo con template
+%Ottimizzazione algoritmo con template basato su metrica di distanza L2
+%Si costruisce un template basato su nWindows forme d'onda di una traccia.
+%Si applica l'algoritmo di riconoscimento sulla traccia stessa al variare di
+%soglia e templateSize. Si tracciano le curve ROC e si determinano i valori 
+%ottimi di soglia e dimensione del template.
+
 addpath './functions'
 
 % Reset workspace
 clear all
 close all
 clc
-
-allDatasets = ["00"; "01"; "03"; "05"; "06"; "07"; "08"; "10"; "100"; "101"; "102"; "103"; "104"; "105"; "11"; "110"; "111"; "112"; "113"; "114"; "115"; "116"; "117"; "118"; "119"; "12"; "120"; "121"; "122"; "13"; "15"; "16"; "17"; "18"; "19"; "20"; "200"; "201"; "202"; "203"; "204"; "205"; "206"; "207"; "208"; "21"; "22"; "23"; "24"; "25"; "26"; "28"; "30"; "32"; "33"; "34"; "35"; "37"; "38"; "39"; "42"; "43"; "44"; "45"; "47"; "48"; "49"; "51"; "53"; "54"; "55"; "56"; "58"; "60"; "62"; "64"; "65"; "68"; "69"; "70"; "71"; "72"; "74"; "75"];
 
 % ottengo i dati da phisionet
 [points, attributes] = loadphysionet('ecg', '118');
@@ -55,7 +58,7 @@ for i=1:a
     end
 end
 plotROC(TP,FP,TN,FN,1);
-% plotTemplate(templateMatrix, 'Template senza filtraggio');
-% plotComparison(points(:,1), attributes, gold,annotations, c, 'Template senza filtraggio');
-% plotTemplate(templateMatrixFiltred, 'Template con filtraggio');
-% plotComparison(filtredSig, attributes, gold,annotationsFiltred, cf, 'Template con filtraggio');
+
+% Dalla ROC si trova manualmente il punto che garantisce le performance
+% migliori. Si trovano i parametri corrispondenti con
+% [a,b] = find(round(Sens, cifre) == valore & round(1-Spec, cifre)==valore)
