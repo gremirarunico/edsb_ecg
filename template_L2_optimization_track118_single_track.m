@@ -17,34 +17,34 @@ filtredSig = filterEcg1and50(points(:,1), attributes.samplingFrequency);
 sampleStart = 100;
 nWindows = 200;
 a = 9;
-b = 40;
+b = 9;
 % costruisco il template senza filtraggio aggiuntivo
-% FN = zeros(a,b);
-% FP = zeros(a,b);
-% TP = zeros(a,b);
-% TN = zeros(a,b);
-% Sens = zeros(a,b);
-% Spec = zeros(a,b);
-% Acc = zeros(a,b);
+FN = zeros(a,b);
+FP = zeros(a,b);
+TP = zeros(a,b);
+TN = zeros(a,b);
+Sens = zeros(a,b);
+Spec = zeros(a,b);
+Acc = zeros(a,b);
 
 totalRep = a*b;
 oldPercent = -1;
 percentCount = 0;
-for i=1:a
+for i=1:7
     templateSize = 3+2*i;% numeri dispari da 5 a 21
     
     templateMatrix = templateDataSelector(filtredSig, gold.sample, sampleStart, nWindows, templateSize);
     templateMatrix = (templateMatrix' ./ max(templateMatrix'))';
     template = mean(templateMatrix);
     
-    for j=32:b
+    for j=1:b
         percentCount = percentCount + 1;
         percent = round(percentCount/totalRep*100,2);
         if(oldPercent ~= percent)
             oldPercent = percent;
             disp("Stato simulazione " + percent + "%");
         end
-        soglia = -0.5 + 0.005*j;
+        soglia = -0.5 + 0.05*j;
         % riconoscimento
         [annotations, c] = templateL2Norm(filtredSig, template, soglia);
         
