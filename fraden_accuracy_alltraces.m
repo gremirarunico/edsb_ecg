@@ -21,7 +21,7 @@ for i = 1:final
     [points, attributes] = loadphysionet('ecg', convertStringsToChars(allDatasets(i)));
     [gold, extras] = loadphysionet('atr', convertStringsToChars(allDatasets(i)));
     
-    filtredSig = filterEcg1and50(points(:,1), attributes.samplingFrequency);
+    filtredSig = filterEcg1and50instable(points(:,1), attributes.samplingFrequency);
     
     annotations = fradenNewman(filtredSig, 0.02, 0.22);
     [FN(i), FP(i), TP(i), TN(i), Sens(i), Spec(i), Acc(i)] = contingency(gold.sample, annotations, attributes.totalsamples);

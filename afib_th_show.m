@@ -77,15 +77,15 @@ for i = 2:length(pIndex)
     if(labels(i-1)=="(AFIB")
         line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[3,3], 'Color', 'green', 'LineWidth', 10);
     end
-    ann = line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[y1,y1]);
-    ann.Marker = 'o';
-    text(PSamples(i-1)/attributes.samplingFrequency, y1, labels(i-1));
+    %ann = line([PSamples(i-1)/attributes.samplingFrequency,PSamples(i)/attributes.samplingFrequency],[y1,y1]);
+    %ann.Marker = 'o';
+    %text(PSamples(i-1)/attributes.samplingFrequency, y1, labels(i-1));
 end
 
 if(labels(i)=="(AFIB")
         line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[3,3], 'Color', 'green', 'LineWidth', 10);
 end
-line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[y1,y1]);
-text(PSamples(end)/attributes.samplingFrequency, y1, labels(end));
+%line([PSamples(end)/attributes.samplingFrequency,attributes.totalsamples/attributes.samplingFrequency],[y1,y1]);
+%text(PSamples(end)/attributes.samplingFrequency, y1, labels(end));
 
 ylim([-3,3]);

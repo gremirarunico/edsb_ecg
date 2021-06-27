@@ -7,15 +7,14 @@ close all
 clc
 
 % ottengo i dati da phisionet
-[points, attributes] = loadphysionet('ecg', '105');
-[gold, extras] = loadphysionet('atr', '105');
+[points, attributes] = loadphysionet('ecg', '118');
+[gold, extras] = loadphysionet('atr', '118');
 
 % plot physion
-plotphysionet(points,attributes,gold,extras);
- return
+%plotphysionet(points,attributes,gold,extras);
 % costruisco il template
 templateSize = 11;
-templateMatrix = multiInputTemplateBuilder(["118"; "102"; "115"; "120"; "45"], 100, 50, 11);
+templateMatrix = multiInputTemplateBuilder(["118"], 100, 50, 11);
 %templateMatrix = templateDataSelector(points(:,1), gold.sample, 100, 2000, 11);
 %templateMatrix = templateDataSelector(points(:,1), gold.sample, 100, 200, templateSize);
 
@@ -23,7 +22,7 @@ templateMatrix = (templateMatrix' ./ max(templateMatrix'))';
 template = mean(templateMatrix);
 
 % algoritmo di riconoscimento
-%[annotations, c] = crosscorrelazione(points(:,1), mean(templateMatrix), 0.9);
+%[annotations, c] = crosscorrelazione(points(:,1), mean(templateMatrix), 0.95);
 [annotations, c] = templateL2Norm(points(:,1), template, -0.015);
 % figure
 % plot(c);
@@ -39,11 +38,13 @@ template = mean(templateMatrix);
 SNR = moody(points(:,1), gold.sample, attributes.samplingFrequency)
 
 % confronto riconoscimento algoritmo vs medico
-%plot(((1:attributes.totalsamples)/attributes.samplingFrequency), c, '-');
+plotComparison(points(:,1), attributes, gold,annotations, -c, 'Norma L2')
+
 %plotComparison(points(:,1), attributes, gold, annotations, c);
-plotComparison(points(:,1), attributes, gold, annotations);
+%plotComparison(points(:,1), attributes, gold, annotations);
 
 % disegno del template
+return
 figure;
 hold on
 for i = 1:size(templateMatrix, 1)

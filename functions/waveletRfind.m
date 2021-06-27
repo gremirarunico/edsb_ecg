@@ -10,8 +10,8 @@ wtrec = zeros(size(wt));
 
 % etraggo solo i coefficienti di dettaglio d3 e d4 contenenti il contenuto
 % frequenzale dei complessi QRS
-wtrec(3:4, :) = wt(3:4,:);
-%wtrec(3, :) = wt(3,:);
+%wtrec(3:4, :) = wt(3:4,:);
+wtrec(3, :) = wt(3,:);
 
 % antritrasformo con la wavelet sym4
 y = imodwt(wtrec,'sym4');

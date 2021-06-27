@@ -19,7 +19,7 @@ for i = 1:final
     end
     [points, attributes] = loadphysionet('ecg', convertStringsToChars(allDatasets(i)));
     [gold, extras] = loadphysionet('atr', convertStringsToChars(allDatasets(i)));
-    annotations = waveletRfind(points(:,1), attributes.samplingFrequency, 3);
+    annotations = waveletRfind(points(:,1), attributes.samplingFrequency, 0.05);
     [FN(i), FP(i), TP(i), TN(i), Sens(i), Spec(i), Acc(i)] = contingency(gold.sample, annotations, attributes.totalsamples);
 end
 

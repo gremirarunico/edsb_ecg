@@ -11,9 +11,9 @@ allDatasets = ["00"; "01"; "03"; "05"; "06"; "07"; "08"; "10"; "100"; "101"; "10
 
 sampleStart = 100;
 nWindows = 200; 
-templateSize = 7; %valore ottimizzato 
-sogliaGammaSigma = 0.7750; %valore ottimizzato
-templateMatrix = multiInputTemplateBuilder(["118"; "116"; "113"; "32"; "200"], sampleStart, nWindows, templateSize, 1, 1);
+templateSize = 21; %valore ottimizzato 
+sogliaGammaSigma = 0.55; %valore ottimizzato
+templateMatrix = multiInputTemplateBuilder(["118"; "102"; "115"; "120"; "45"], sampleStart, nWindows, templateSize, 1, 1);
 template = mean(templateMatrix);
 
 final = length(allDatasets);
