@@ -1,3 +1,17 @@
+% Funzione waveletRfind.m
+% Identifica i complessi QRS usando la decomposizione wavelet
+
+% Input:
+% - ecgsig, campioni del segnale
+% - samplingFreq, frequenza di campionamento
+% - th, threshold
+% - pdistMS, distanza in millisecondi tra due complessi QRS successivi
+%   minima
+% - display (1 o 0), se 1 disegna il plot confronto tra segnale ecg e il
+%   modulo quadro del segnale ricostruito
+
+% Output: locs, vettore dei tempi contenente gli eventi
+
 function locs = waveletRfind(ecgsig, samplingFreq, th, pdistMS, display)
 
 s = 1:length(ecgsig); % vettore campioni
