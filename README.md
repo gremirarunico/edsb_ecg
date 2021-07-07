@@ -1,11 +1,11 @@
 Project: edsb_ecg
 
-== Introduzione ==
+## Introduzione
 Questo è il risultato di un lavoro per un progetto in un esame universitario.
 
 Maggiori informazioni e la relazione del progetto la potrete trovare all'[indirizzo web di questo repository](https://gremirarunico.github.io/edsb_ecg/).
 
-== Installazione ==
+## Installazione
 In questo progetto mancano i dati da elaborare. Essi sono reperibili su physionet ai seguenti indirizzi: [fibrillazione atriale](https://physionet.org/content/ltafdb/1.0.0/) e [battiti normali](https://physionet.org/content/nsrdb/1.0.0/).
 
 Per elaborare i dati è necessario per prima cosa scaricarli da phisionet (si può usare wget o quello che volete), in seguito è necessario scaricare questo software addizionale [wfdb-matlab](https://physionet.org/content/wfdb-matlab/0.10.0/) e copiare la directory mcode all'interno della directory di lavoro.
