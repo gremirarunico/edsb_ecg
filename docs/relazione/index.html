@@ -1,0 +1,747 @@
+<!doctype html><html lang=en dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="Obiettivi e descrizione del database #  Lo scopo del progetto è quello di identificare automaticamente i complessi QRS all&rsquo;interno dei tracciati del database di physionet Long Term AF Database e di ricercarne gli episodi di fibrillazione atriale.
+Il database include 84 registrazioni acquisite con Holter ECG di soggetti con fibrillazione atriale parossistica oppure con fibrillazione atriale permanente. Ad eccezione di una traccia, tutte le tracce presentano episodi più o meno lunghi di fibrillazione atriale (da qualche minuto alla totalità delle 24-25 ore di registrazione)."><meta name=theme-color content="#FFFFFF"><meta property="og:title" content="Progetto di Elaborazione di Dati e Segnali Biomedici"><meta property="og:description" content><meta property="og:type" content="website"><meta property="og:url" content="https://gremirarunico.github.io/edsb_ecg/relazione/"><title>Progetto di Elaborazione di Dati e Segnali Biomedici | edsb_ecg</title><link rel=manifest href=/edsb_ecg/manifest.json><link rel=icon href=/edsb_ecg/favicon.png type=image/x-icon><link rel=stylesheet href=/edsb_ecg/book.min.958cea7827621d6fbcb3acf091344c3e44e3d2a9428f9c3c38bb9eb37bf8c45d.css integrity="sha256-lYzqeCdiHW+8s6zwkTRMPkTj0qlCj5w8OLues3v4xF0=" crossorigin=anonymous><script defer src=/edsb_ecg/sw.min.dde0740caa1ec7fccaaa09a8f8595fac4d141d2ce9ef0eeb7d6c12658cd27b67.js integrity="sha256-3eB0DKoex/zKqgmo+FlfrE0UHSzp7w7rfWwSZYzSe2c=" crossorigin=anonymous></script><link rel=alternate type=application/rss+xml href=https://gremirarunico.github.io/edsb_ecg/relazione/index.xml title=edsb_ecg></head><body dir=ltr><input type=checkbox class="hidden toggle" id=menu-control>
+<input type=checkbox class="hidden toggle" id=toc-control><main class="container flex"><aside class=book-menu><div class=book-menu-content><nav><h2 class=book-brand><a href=/edsb_ecg/><span>edsb_ecg</span></a></h2><ul><li><a href=/edsb_ecg/><strong>Home</strong></a></li><li><a href=/edsb_ecg/relazione/ class=active>Relazione</a></li></ul><p><br></p><ul><li><a href=https://github.com/gremirarunico/edsb_ecg target=_blank rel=noopener>Github</a></li></ul></nav><script>(function(){var a=document.querySelector("aside .book-menu-content");addEventListener("beforeunload",function(b){localStorage.setItem("menu.scrollTop",a.scrollTop)}),a.scrollTop=localStorage.getItem("menu.scrollTop")})()</script></div></aside><div class=book-page><header class=book-header><div class="flex align-center justify-between"><label for=menu-control><img src=/edsb_ecg/svg/menu.svg class=book-icon alt=Menu></label>
+<strong>Progetto di Elaborazione di Dati e Segnali Biomedici</strong>
+<label for=toc-control><img src=/edsb_ecg/svg/toc.svg class=book-icon alt="Table of Contents"></label></div><aside class="hidden clearfix"><nav id=TableOfContents><ul><li><a href=#obiettivi-e-descrizione-del-database>Obiettivi e descrizione del database</a></li><li><a href=#algoritmi-di-riconoscimento-del-complesso-qrs>Algoritmi di riconoscimento del complesso QRS</a><ul><li><a href=#algoritmo-di-fraden-newman>Algoritmo di Fraden-Newman</a><ul><li><a href=#pre-processing>Pre-processing</a></li><li><a href=#elaborazione>Elaborazione</a></li><li><a href=#decisione-e-ottimizzazione>Decisione e ottimizzazione</a></li></ul></li></ul></li><li><a href=#metodo-con-template>Metodo con template</a><ul><li><ul><li><a href=#descrizione-algoritmo-di-costruzione-del-template>Descrizione algoritmo di costruzione del template</a></li></ul></li><li><a href=#metodo-della-distanza-con-norma-l2>Metodo della distanza con norma L2</a><ul><li><a href=#descrizione-dellalgoritmo>Descrizione dell&rsquo;algoritmo</a></li><li><a href=#ottimizzazione>Ottimizzazione</a></li></ul></li><li><a href=#metodo-della-cross-correlazione-normalizzata>Metodo della cross-correlazione normalizzata</a><ul><li><a href=#descrizione-dellalgoritmo-1>Descrizione dell&rsquo;algoritmo</a></li><li><a href=#ottimizzazione-1>Ottimizzazione</a></li></ul></li></ul></li><li><a href=#algoritmo-con-dwt>Algoritmo con DWT</a><ul><li><a href=#trasformata-wavelet>Trasformata Wavelet</a></li><li><a href=#descrizione-dellalgoritmo-2>Descrizione dell&rsquo;algoritmo</a><ul><li><a href=#passi-algoritmici>Passi algoritmici</a></li><li><a href=#ottimizzazione-2>Ottimizzazione</a></li></ul></li></ul></li><li><a href=#conclusioni>Conclusioni</a></li><li><a href=#fibrillazione-atriale>Fibrillazione atriale</a><ul><li><a href=#cosè-e-come-si-manifesta>Cos&rsquo;è e come si manifesta</a></li><li><a href=#descrizione-dellalgoritmo-di-rilevazione-della-fibrillazione-atriale>Descrizione dell&rsquo;algoritmo di rilevazione della fibrillazione atriale</a><ul><li><a href=#plot-di-poincaré>Plot di Poincaré</a></li><li><a href=#sample-entropy>Sample Entropy</a></li><li><a href=#passi-dellalgoritmo>Passi dell&rsquo;algoritmo</a></li><li><a href=#alcune-osservazioni-sui-risultati-ottenuti>Alcune osservazioni sui risultati ottenuti</a></li></ul></li></ul></li><li><a href=#bibliografia>Bibliografia</a></li></ul></nav></aside></header><article class=markdown><h1 id=obiettivi-e-descrizione-del-database>Obiettivi e descrizione del database
+<a class=anchor href=#obiettivi-e-descrizione-del-database>#</a></h1><p>Lo scopo del progetto è quello di identificare automaticamente i
+complessi QRS all&rsquo;interno dei tracciati del database di physionet <strong>Long
+Term AF Database</strong> e di ricercarne gli episodi di fibrillazione atriale.</p><p>Il database include 84 registrazioni acquisite con Holter ECG di
+soggetti con fibrillazione atriale parossistica oppure con fibrillazione
+atriale permanente. Ad eccezione di una traccia, tutte le tracce
+presentano episodi più o meno lunghi di fibrillazione atriale (da
+qualche minuto alla totalità delle 24-25 ore di registrazione). Per ogni
+segnale sono riportate le annotazioni inserite manualmente da esperti
+clinici. I segnali sono digitalizzati a 128 Hz con una risoluzione di 12
+bit in un range di 20 mV.</p><h1 id=algoritmi-di-riconoscimento-del-complesso-qrs>Algoritmi di riconoscimento del complesso QRS
+<a class=anchor href=#algoritmi-di-riconoscimento-del-complesso-qrs>#</a></h1><p><img src=image1.png alt></p><p>L&rsquo;elettrocardiogramma è la riproduzione grafica dell&rsquo;attività elettrica
+del cuore registrata a livello della superficie del corpo che descrive
+come il potenziale cardiaco si modifica nello svolgimento della sua
+funzione. Il caratteristico tracciato ECG descrive la somma delle
+depolarizzazioni e ripolarizzazioni di tutte le cellule miocardiche:</p><ul><li><p><strong>Onda P</strong>: È la prima onda che si identifica nel ciclo. Corrisponde
+alla depolarizzazione degli atri ed ha origine dal nodo
+seno-atriale; la sua durata varia tra i 60 e i 120 ms;</p></li><li><p><strong>Complesso QRS</strong>: si tratta di un insieme di tre onde che si
+susseguono l'una all'altra, corrispondente alla depolarizzazione
+dei ventricoli. La durata normale dell&rsquo;intero complesso è compresa
+tra 60 ms e 100 ms;</p></li><li><p><strong>Onda T</strong>: rappresenta la prima onda della ripolarizzazione dei
+ventricoli e non è sempre identificabile in quanto può essere di
+ampiezza molto piccola.</p></li></ul><p>In questo lavoro sono stati implementati quattro algoritmi di
+riconoscimento del complesso QRS:</p><ul><li><p>Fraden-Newman;</p></li><li><p>Template con metrica di distanza (norma L2);</p></li><li><p>Template con metrica di similarità (cross-correlazione
+normalizzata);</p></li><li><p>Algoritmo basato su decomposizione e ricostruzione DWT.</p></li></ul><h2 id=algoritmo-di-fraden-newman>Algoritmo di Fraden-Newman
+<a class=anchor href=#algoritmo-di-fraden-newman>#</a></h2><p>Abbiamo scelto di implementare un algoritmo di event detection
+<strong>euristico</strong> per la rilevazione dei complessi QRS. Infatti, in questo
+caso la morfologia del complesso QRS non è rilevante ai fini dell&rsquo;event
+detection mentre nel caso dell&rsquo;algoritmo basato su template la forma del
+complesso ha impatto sulle performance dell&rsquo;algoritmo.</p><p>L&rsquo;algoritmo di Fraden Newman per la rilevazione del complesso QRS è un
+algoritmo di tipo AF (Amplitude First Derivative). Esso si basa quindi
+sull&rsquo;utilizzo di informazione proveniente sia dall&rsquo;ampiezza del segnale
+sia dalla sua derivata prima. Nella struttura dell&rsquo;algoritmo si
+riconoscono i blocchi tipici di un algoritmo di event detection:</p><h3 id=pre-processing>Pre-processing
+<a class=anchor href=#pre-processing>#</a></h3><p>L&rsquo;algoritmo mostra performance ridotte in caso di presenza di rumore a
+bassa frequenza legato alla respirazione. Si è quindi reso necessario un
+pre-filtraggio del segnale con un filtro IIR passa-banda di ordine 20 a
+<strong>sfasamento nullo</strong> con banda passante tra 1 Hz e 50 Hz e attenuazione
+in banda attenuata di 60 dB. A tale scopo è stata usata la funzione di
+matlab <em>filtfilt</em>. Di seguito si riporta la risposta in frequenza del
+filtro.</p><p><img src=image2.png alt></p><h3 id=elaborazione>Elaborazione
+<a class=anchor href=#elaborazione>#</a></h3><p>Nel blocco di elaborazione, il segnale viene manipolato al fine di
+rendere evidenti gli eventi da rilevare. I passi dell&rsquo;algoritmo sono i
+seguenti:</p><link rel=stylesheet href=/edsb_ecg/katex/katex.min.css><script defer src=/edsb_ecg/katex/katex.min.js></script><script defer src=/edsb_ecg/katex/auto-render.min.js onload=renderMathInElement(document.body)></script><span>\[soglia_{1} = th_{1}\ max\lbrack signal(n)\rbrack\]</span><p>$$signalRect = abs(signal)$$</p><span>\[$$signalClipped = \left\{ \begin{matrix}
+\text{signalRect\ \ \ \ \ }\text{if}\ \ \ \ \ \ \ signalRect \geq soglia_{1} \\
+\text{sogli}a_{1}\text{\ \ \ \ \ \ \ \ \ \ \ \ \ }\text{if}\ \ \ \ \ \ signalRect &lt; soglia_{1} \\
+\end{matrix} \right.\\]</span><ul><li><p>si calcola la derivata prima del segnale;</p></li><li><p>si imposta una soglia $\text{sogli}a_{2}$ sulla derivata. Se la
+derivata supera la soglia allora c&rsquo;è un evento.</p></li></ul><p><img src=image3.png alt>{width=&ldquo;5.246753062117235in&rdquo;
+height=&ldquo;3.932886045494313in&rdquo;}</p><h3 id=decisione-e-ottimizzazione>Decisione e ottimizzazione
+<a class=anchor href=#decisione-e-ottimizzazione>#</a></h3><p>L&rsquo;algoritmo si basa sull&rsquo;utilizzo di una soglia per il low level
+clipping e di una soglia sulla derivata. Per scegliere queste soglie
+sono state tracciate le curve ROC (Receiving Operating Characteristic)
+al variare di entrambe le soglie al fine di ottenere dei valori
+accettabili di sensibilità e specificità. Le curve ROC riportate sono
+relative alla traccia 118:</p><p><img src=image4.png alt></p><p>Si osserva che le soglie che garantiscono una maggiore accuratezza sono</p><p><img src=image5.emf alt></p><p><img src=image6.emf alt></p><p>In tal caso si ottengono, relativamente alla traccia 118:</p><p>|&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-|&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;|
+| Fraden-Newman | QRS nel gold | Non-QRS nel gold |
+| | standard | standard |</p><table><thead><tr><th>Traccia 118</th><th></th><th></th></tr></thead><tbody><tr><td>QRS rilevati</td><td>VP = 124057</td><td>FP = 114473</td></tr><tr><td>dall&rsquo;algoritmo</td><td></td><td></td></tr><tr><td>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-</td><td>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;</td><td></td></tr><tr><td>Non-QRS per</td><td>FN = 1116</td><td>VN = 10819554</td></tr><tr><td>l&rsquo;algoritmo</td><td></td><td></td></tr><tr><td>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-</td><td>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-</td><td>&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;</td></tr></tbody></table><p>Conseguentemente si hanno i seguenti valori di sensibilità e specificità
+per l&rsquo;algoritmo:</p><p>$$Sens = 99.11%$$</p><p>$$Spec = 99.04%$$</p><p>Di seguito si riporta il grafico di sensibilità, specificità e
+accuratezza ottenute per ognuna delle tracce del dataset con le soglie
+calcolate in precedenza.</p><p><img src=image7.png alt="Immagine che contiene testo Descrizione generata
+automaticamente"></p><p>$$\text{Sen}s_{\text{average}} = 71,71%$$</p><p>$$\text{Spe}c_{\text{average}} = 98,95%$$</p><p>$$\text{Ac}c_{\text{average}} = 98,67%$$</p><p>Si osserva che con le soglie stabilite, la sensibilità dell&rsquo;algoritmo
+risulta inferiore al 60% per alcune delle tracce su cui è stato
+applicato. Le ragioni che abbiamo individuato relativamente a questo
+fatto sono due:</p><ol><li><p>le <strong>ampie oscillazioni</strong> che si manifestano all&rsquo;inizio del segnale
+filtrato che inducono ad errori circa il calcolo delle soglie;</p></li><li><p>spike molto ampi nel segnale ECG che sono probabilmente <strong>artefatti
+da movimento</strong> degli elettrodi.</p></li></ol><p>Per quanto concerne il primo problema, abbiamo osservato che le ampie
+oscillazioni all&rsquo;inizio del segnale filtrato sono dovute
+all&rsquo;implementazione della funzione di Matlab <em>filtfilt</em>. La presenza di
+queste oscillazioni molto più ampie dei complessi QRS comportava un
+errore nel calcolo della soglia inferiore per l&rsquo;algoritmo di Fraden
+Newman, andando quindi a ridurre considerevolmente la sua sensibilità.</p><p>Da alcune ricerche sulla documentazione della funzione <em>filtfilt</em>, è
+emerso che questo problema è dovuto al fatto che il filtro implementato
+da <em>filtfilt</em> è un <strong>filtro marginalmente stabile</strong>. Infatti, come
+visibile nel diagramma poli/zeri, gli zeri del filtro sono molto vicini
+alla circonferenza unitaria. [3]</p><p><img src=image8.png alt></p><p>Per risolvere questo problema si è reso necessario effettuare uno <strong>zero
+padding</strong> all&rsquo;inizio e alla fine del segnale prima di filtrarlo.</p><p>Il grafico a seguire mostra i primi campioni della traccia 00 dopo il
+filtraggio con <em>filtfilt</em> con e senza lo zero padding.</p><p><img src=image9.png alt>{width=&ldquo;3.554930008748906in&rdquo;
+height=&ldquo;2.6661975065616796in&rdquo;}</p><p>Con questo accorgimento il numero di tracce in cui la sensibilità
+risulta inferiore al 60% è notevolmente diminuito rispetto a quanto
+mostrato in precedenza.</p><p><img src=image10.png alt>{width=&ldquo;5.957258311461067in&rdquo;
+height=&ldquo;3.396725721784777in&rdquo;}</p><p>$$\text{Sen}s_{\text{average}} = 92,48%$$</p><p>$$\text{Spe}c_{\text{average}} = 98,16%$$</p><p>$$\text{Ac}c_{\text{average}} = 98,11%$$</p><p>Nelle tracce in cui la sensibilità risulta ancora inferiore al 60%
+abbiamo effettivamente trovato degli artefatti da movimento degli
+elettrodi che si manifestano con segnali di ampiezza molto maggiore del
+livello medio del segnale, come visibile dal segmento di traccia
+riportato relativo alla traccia 208:</p><p><img src=image11.png alt>{width=&ldquo;4.0089031058617675in&rdquo;
+height=&ldquo;2.3636373578302714in&rdquo;}</p><p>Un miglioramento ulteriore delle performance dell&rsquo;algoritmo si sarebbe
+potuto ottenere andando a rimuovere questi artefatti, per esempio usando
+dei filtri adattativi ricorsivi.</p><h1 id=metodo-con-template>Metodo con template
+<a class=anchor href=#metodo-con-template>#</a></h1><p>Abbiamo deciso di implementare anche un algoritmo di event detection
+basato su <strong>template</strong>. Negli algoritmi di event detection basati su
+template, l&rsquo;informazione a priori sulla forma d&rsquo;onda da ricercare viene
+codificata all&rsquo;interno di una sequenza di campioni, ovvero il
+<strong>template</strong>, che definiscono in maniera univoca tale forma d&rsquo;onda.
+Abbiamo scelto di costruire il template non a partire da una singola
+manifestazione della forma d&rsquo;onda ma di far riferimento ad una <strong>base di
+training</strong> formata da un certo numero di ripetizioni della forma d&rsquo;onda.
+Il template viene poi costruito facendo una media delle $N$ ripetizioni.</p><p>Una volta generato il template occorre ricercare la forma d&rsquo;onda
+codificata dal template all&rsquo;interno del segnale stesso. A tale scopo
+abbiamo deciso di realizzare due diversi metodi:</p><ul><li><p>il metodo della distanza con norma L2;</p></li><li><p>il metodo della cross-correlazione normalizzata.</p></li></ul><h3 id=descrizione-algoritmo-di-costruzione-del-template>Descrizione algoritmo di costruzione del template
+<a class=anchor href=#descrizione-algoritmo-di-costruzione-del-template>#</a></h3><p>Come detto, il template può essere costruito o a partire da una sola
+traccia (usando <em>templateBuilder</em>) oppure da più tracce usando la
+funzione <em>multiInputTemplateBuilder</em>. Queste funzioni di fatto calcolano
+il template medio come media di un certo numero di forme d&rsquo;onda
+selezionate a partire da una traccia o dalle tracce che costituiscono la
+base di training.</p><p>La funzione che va a selezionare le forme d&rsquo;onda all&rsquo;interno delle
+tracce della base di training è <em>templateDataSelector</em>. I passi seguiti
+sono i seguenti:</p><ol><li><p>Facendo riferimento alle <strong>annotazioni</strong> del gold standard, si
+scelgono $\text{nWindows}$ forme d&rsquo;onda costituite da un numero di
+campioni pari a $\text{templateSize}$ da ogni traccia del training
+set. Il numero di campioni del template $\text{templateSize}$ deve
+essere <strong>dispari</strong> (l&rsquo;algoritmo aggiusta automaticamente questo
+parametro in modo che lo sia).</p></li><li><p>I campioni finestrati del segnale vengono centrati attorno
+all&rsquo;annotazione del medico per cui l&rsquo;operazione di <strong>allineamento</strong>
+e di <strong>adattamento</strong> della durata delle forme d&rsquo;onda viene
+implementata in modo automatico perché il <strong>punto fiduciario è il
+baricentro della finestra</strong> e la durata è esattamente
+$\text{templateSize}$ per ogni forma d&rsquo;onda del training set;</p></li><li><p>Per essere certi che l&rsquo;allineamento sia corretto sempre, anche in
+presenza di piccoli errori nelle annotazioni del gold standard,
+l&rsquo;algoritmo controlla che il <strong>campione centrale i</strong>n ciascuna
+finestra sia effettivamente il <strong>valore massimo</strong>. Nel caso in cui
+non lo sia si effettua una <strong>traslazione</strong> a destra o a sinistra.</p></li><li><p>La funzione ritorna una matrice contenente sulle righe i campioni di
+ogni forma d&rsquo;onda selezionata a cui viene rimosso il valor medio per
+averlo a media nulla.</p></li></ol><h2 id=metodo-della-distanza-con-norma-l2>Metodo della distanza con norma L2
+<a class=anchor href=#metodo-della-distanza-con-norma-l2>#</a></h2><p>In questo metodo si usa una <strong>metrica di distanza</strong> tra segnale e
+template definita dalla norma L2:</p><p>$$L2(i) = \frac{1}{D}{\sum_{k = 0}^{N - 1}\left| x(i + k) - TMP(k) \right|}^{2}$$</p><p>con $D$ il numero di campioni del template e $N$ il numero di campioni
+del segnale. L&rsquo;evento si trova in corrispondenza della minima distanza
+tra segnale e template (ovvero in corrispondenza della massima
+somiglianza).</p><h3 id=descrizione-dellalgoritmo>Descrizione dell&rsquo;algoritmo
+<a class=anchor href=#descrizione-dellalgoritmo>#</a></h3><p>I passi dell&rsquo;algoritmo sono i seguenti:</p><ol><li><p>si filtra il segnale con un filtro passa-banda tra 1 e 50 Hz (si fa
+anche un filtraggio a media mobile);</p></li><li><p>si costruisce il template equalizzato al massimo e allineato sui
+picchi utilizzando la funzione <em>templateDataSelector</em> per
+selezionare le forme d&rsquo;onda e <em>multiInputTemplateBuilder</em> per
+costruire il template come media;</p></li><li><p>si costruisce la norma L2 con la funzione <em>templateL2Norm</em> che
+calcola la norma L2;</p></li><li><p>si identifica un evento quando i minimi locali della norma L2
+risultano inferiori ad una certa soglia $\text{th}$ (abbiamo usato
+<em>findpeaks</em>).</p></li></ol><p>Sia segnale che template sono normalizzati al massimo.</p><h3 id=ottimizzazione>Ottimizzazione
+<a class=anchor href=#ottimizzazione>#</a></h3><p>Abbiamo ottimizzato i parametri dell&rsquo;algoritmo, ovvero la dimensione del
+template e la soglia, a partire da un template costruito su 200 forme
+d&rsquo;onda della traccia 118 e testato sulla traccia 118 stessa (training e
+testing set appartengono alla stessa forma d&rsquo;onda).</p><p>La curva ROC risultante è riportata di seguito:</p><p><img src=image12.png alt></p><p>Si trova che i valori ottimi di dimensione del template e della soglia
+sono:</p><p>$$templateSize = 7\ campioni$$</p><p>$$threshold = - 0.495$$</p><p>Con questi parametri si raggiungono i seguenti valori di specificità,
+accuratezza e sensibilità sulla traccia 118 sono:</p><p>$$Sens = 99,64%$$</p><p>$$Spec = 99,74%$$</p><p>$$Acc = 99,74%$$</p><p>Abbiamo quindi applicato l&rsquo;algoritmo a tutte le tracce ottenendo i
+seguenti risultati:</p><p><img src=image13.png alt="Immagine che contiene testo, cielo Descrizione generata automaticamente"></p><p>$$\text{Sen}s_{\text{average}} = 84,43%$$</p><p>$$\text{Spe}c_{\text{average}} = 98,65%$$</p><p>$$\text{Ac}c_{\text{average}} = 98,52%$$</p><p>Come si vede i risultati relativamente alla sensibilità non sono ottimi.
+Su alcune tracce, in particolare la 105 e la 203, la sensibilità nulla
+non è dovuta all&rsquo;algoritmo ma al fatto che si tratta di una derivazione
+ECG differente dalle altre per cui la forma del template è completamente
+diversa dai complessi QRS di queste tracce.</p><p>Abbiamo pensato di effettuare un <strong>filtraggio a media</strong> <strong>mobile</strong> sul
+segnale per rimuovere eventuali fluttuazioni residue della linea di base
+(nonostante il prefiltraggio passa-banda). Abbiamo quindi rieffettuato
+il calcolo dei parametri ottimi tracciando le curve ROC al variare dei
+parametri con il template costruito a partire dalla traccia 118 e
+testando l&rsquo;algoritmo sulla traccia 118 stessa. I risultati ottenuti sono
+riportati di seguito:</p><p>$$templateSize = 9\ campioni$$</p><p>$$threshold = - 0,1$$</p><p>$$Sens = 99,38%$$</p><p>$$Spec = 99,76%$$</p><p>$$Acc = 97,76%$$</p><p>Con questi nuovi parametri, i risultati su tutte le tracce sono i
+seguenti:</p><p><img src=image14.png alt></p><p>$$\text{Sen}s_{\text{average}} = 94,17%$$</p><p>$$\text{Spe}c_{\text{average}} = 97,88%$$</p><p>$$\text{Ac}c_{\text{average}} = 97,85%$$</p><p>Abbiamo infine provato a costruire il template a partire da un certo
+numero di forme d&rsquo;onda prelevate da più tracce del training set (118,
+102, 115, 120, 45). Abbiamo quindi applicato l&rsquo;algoritmo ad un certo
+numero di forme d&rsquo;onda (testing set: 00, 01, 03, 05, 06, 07, 08, 10,
+100, 101, 102, 103, 104, 11, 110, 111) compatibilmente con i <strong>tempi di
+esecuzione</strong> al fine di individuare nuovamente i parametri che
+massimizzassero le performance dell&rsquo;algoritmo. I risultati sono
+riportati di seguito:</p><p><img src=image15.png alt></p><p>$$templateSize = 7\ campioni$$</p><p>$$threshold = - 0.2$$</p><p>Applicando l&rsquo;algoritmo a tutte le tracce con i parametri riportati sopra
+si ottengono i seguenti risultati:</p><p><img src=image16.png alt></p><p>$$\text{Sen}s_{\text{average}} = 85,98%$$</p><p>$$\text{Spe}c_{\text{average}} = 98,79%$$</p><p>$$\text{Ac}c_{\text{average}} = 98,68%$$</p><p>Pertanto, in questo caso, le performance migliori si ottenevano usando
+un template costruito a partire da una sola traccia con soglia
+$threshold = - 0.1$ e una dimensione del template di 9 campioni.</p><p>Non si può escludere che un training set diverso da quello utilizzato da
+noi, magari formato da più tracce, potesse fornire risultati migliori.
+Abbiamo potuto constatare come nelle tracce in cui la sensibilità è
+molto bassa siano presenti molti <strong>battiti ventricolari</strong>, i quali
+presentano una forma diversa rispetto a quelli sinusali. Una possibile
+soluzione potrebbe essere quindi quella di costruire un template anche
+per questi tipi di battiti.</p><h2 id=metodo-della-cross-correlazione-normalizzata>Metodo della cross-correlazione normalizzata
+<a class=anchor href=#metodo-della-cross-correlazione-normalizzata>#</a></h2><p>Nel metodo della <strong>cross-correlazione normalizzata</strong> si usa una
+<strong>metrica di similitudine</strong> tra segnale e template definita dall&rsquo;indice
+di correlazione lineare $\gamma_{\text{TMPx}}(k)$ espresso dalla
+seguente:</p><p>$$\gamma_{\text{TMPx}}(k) = \frac{{\widehat{c}}_{\text{TMPx}}}{\sigma_{\text{TMP}}\sigma_{x}(k)} = \frac{1}{D - 1}\frac{\sum_{i = 1}^{D}\left( \text{TMP}(i) - \overline{\text{TMP}} \right)\left( x(i + k) - \overline{x}(k) \right)}{\sqrt{{\sum_{i = 1}^{D}\left( \text{TMP}(i) - \overline{\text{TMP}} \right)}^{2}\sum_{i = 1}^{D}\left( x(i + k) - \overline{x}(k) \right)^{2}}}$$</p><p>$x$ è il segnale e $\text{TMP}$ il template.  $\overline{\text{TMP}}$ è
+il valor medio del template mentre $\overline{x}(k)$ è il valor medio
+del segnale che viene calcolato in ogni finestra di $D$ campioni, dove
+$D$ è la durata del template. La sottrazione di $\overline{x}(k)$
+equivale ad una rimozione della linea di base attraverso una media
+mobile di $D$ campioni. La divisione per la deviazione standard del
+segnale calcolata su ogni finestra di $D$ campioni rappresenta invece
+una equalizzazione. L&rsquo;indice di correlazione lineare assume valori
+compresi tra 1 e -1 dove 1 indica la massima somiglianza e -1 la
+perfetta opposizione.</p><p>L&rsquo;evento viene rilevato quando l&rsquo;indice di correlazione supera una certa
+soglia.</p><h3 id=descrizione-dellalgoritmo-1>Descrizione dell&rsquo;algoritmo
+<a class=anchor href=#descrizione-dellalgoritmo-1>#</a></h3><p>I passi dell&rsquo;algoritmo sono i seguenti:</p><ol><li><p>si costruisce il template allineato al punto fiduciario (il massimo)
+utilizzando la funzione <em>templateDataSelector</em> per selezionare le
+forme d&rsquo;onda e <em>multiInputTemplateBuilder</em> per costruire il template
+come media;</p></li><li><p>si calcola la funzione di cross-correlazione normalizzata con la
+funzione <em>crosscorrelazione</em>;</p></li><li><p>si effettua una ricerca di massimi con la funzione <em>findpeaks</em>. Si
+identifica un evento al superamento della soglia $\text{threshold}$.</p></li></ol><p>Nella proposta finale dell&rsquo;algoritmo sia segnale che template sono stati
+filtrati con il filtro passa-banda tra 1 e 50 Hz.</p><h3 id=ottimizzazione-1>Ottimizzazione
+<a class=anchor href=#ottimizzazione-1>#</a></h3><p>Costruiamo il template sulla traccia 118 e lo testiamo sulla traccia 118
+(testing set e training set appartengono alla stessa traccia). I grafici
+a seguire sono relativi ad un template costruito con 200 forme d&rsquo;onda
+della traccia 118 ognuna di dimensioni 11 campioni partendo dal
+1000esimo campione.</p><p>Non ci sono apprezzabili differenze tra il template costruito con il
+segnale non filtrato e quello costruito con il segnale filtrato. Ciò è
+probabilmente dovuto all&rsquo;implementazione dell&rsquo;indice di
+cross-correlazione normalizzata, in cui andiamo a sottrarre il valor
+medio del segnale in ciascuna finestra di $D$ campioni. Questo equivale
+ad un filtraggio a media mobile che elimina la linea di base.</p><p><img src=image17.png alt></p><p><img src=image18.png alt></p><p>Testando l&rsquo;algoritmo sulla traccia 118 con una soglia sulla
+crosscorrelazione normalizzata di 0.9 si ottiene la seguente tabella di
+contingenza relativi al caso senza filtraggio:</p><p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| $$\mathbf | QRS nel gold | Non-QRS nel gold |
+| {\text{metodo\ γ}}$$ | standard | standard |
+| | | |
+| Senza filtraggio | | |
+| | | |
+| Soglia 0.9 | | |
+| | | |
+| $$\mathbf{D = 11}$$ | | |
++======================+======================+=======================+
+| QRS rilevati | VP = 124580 | FP = 90249 |
+| dall&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| Non-QRS per | FN = 593 | VN = 10843778 |
+| l&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+</p><p>$$Sens = 99,53%$$</p><p>$$Spec = 99,17%$$</p><p>$$Accuratezza = 99,18%$$</p><p>Testando l&rsquo;algoritmo sulla traccia 118 si ottiene la seguente tabella di
+contingenza relativi al caso con filtraggio:</p><p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| $$\mathbf | QRS nel gold | Non-QRS nel gold |
+| {\text{metodo\ γ}}$$ | standard | standard |
+| | | |
+| con filtraggio | | |
+| | | |
+| soglia 0.9 | | |
+| | | |
+| $$\mathbf{D = 11}$$ | | |
++======================+======================+=======================+
+| QRS rilevati | VP = 124793 | FP = 110694 |
+| dall&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| Non-QRS per | FN = 380 | VN = 10823333 |
+| l&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+</p><p>$$Sens = 98,99%$$</p><p>$$Spec = 98,99%$$</p><p>$$Accuratezza = 99,00%$$</p><p>Si osserva che il filtraggio produce un peggioramento delle prestazioni.</p><p>Si osserva l&rsquo;elevata quantità di falsi positivi come anche visibile dal
+grafico sottostante:</p><p><img src=image19.png alt></p><p>Abbiamo cercato quindi di migliorare le prestazioni effettuando degli
+aggiustamenti. Abbiamo fatto variare il numero di campioni nel template
+da 5 campioni, corrispondenti ad una durata del complesso QRS di 50 ms a
+21 campioni, corrispondenti ad una durata di 150 ms.</p><p>La soglia sulla crosscorrelazione normalizzata è stata fatta variare da
+0.6 a 0.95 in 11 iterazioni.</p><p>A seguire si riporta la curva ROC relativamente al caso non filtrato.</p><p><img src=image20.png alt></p><p>Dalla curva risulta che la soglia ottima sulla correlazione è di 0.845
+mentre il numero di campioni ottimo per il template è di 17 campioni.</p><p>$$D = 17\ samples,\ \ \ th = 0.845$$</p><p>Con questi valori dei parametri si ottiene la seguente tabella di
+contingenza</p><p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| $$\mathbf | QRS nel gold | Non-QRS nel gold |
+| {\text{metodo\ γ}}$$ | standard | standard |
+| | | |
+| senza filtraggio | | |
+| | | |
+| soglia 0.845 | | |
+| | | |
+| $$\mathbf{D = 17}$$ | | |
++======================+======================+=======================+
+| QRS rilevati | VP = 124377 | FP = 30589 |
+| dall&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| Non-QRS per | FN = 796 | VN = 10903438 |
+| l&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+</p><p>$$Sens = 99,36%$$</p><p>$$Spec = 99,72%$$</p><p>$$Accuratezza = 99,72%$$</p><p>Si osserva dunque un miglioramento delle prestazioni soprattutto per
+quanto riguarda il numero dei falsi positivi.</p><p>A seguire si riporta la curva ROC relativamente al caso con segnale e
+template filtrati:</p><p><img src=image21.png alt></p><p>Dalla curva risulta che la soglia ottima sulla correlazione è di 0.74
+mentre il numero di campioni ottimo per il template è di 25 campioni.</p><p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| $$\mathbf | QRS nel gold | Non-QRS nel gold |
+| {\text{metodo\ γ}}$$ | standard | standard |
+| | | |
+| con filtraggio | | |
+| | | |
+| soglia 0.74 | | |
+| | | |
+| $\mathbf{D =} | | |
+| $<code>&lt;!-- --></code>{=html}25 | | |
++======================+======================+=======================+
+| QRS rilevati | VP = 124672 | FP = 14500 |
+| dall&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+
+| Non-QRS per | FN = 501 | VN = 10919527 |
+| l&rsquo;algoritmo con | | |
+| template | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&ndash;+</p><p>$$Sens = 99,60%$$</p><p>$$Spec = 99,87%$$</p><p>$$Accuratezza = 99,86%$$</p><p>Questi risultati sono relativi ad un training set e un testing set
+prelevati dalla stessa traccia.</p><p>Abbiamo quindi testato l&rsquo;algoritmo con i parametri ottimizzati su tutte
+le tracce. Il grafico riporta i risultati:</p><p><img src=image22.png alt></p><p>$$\text{Sen}s_{\text{average}} = 91,99%$$</p><p>$$\text{Spe}c_{\text{average}} = 99,79%$$</p><p>$$\text{Ac}c_{\text{average}} = 99,70%$$</p><p>Si osserva che per alcune tracce la sensibilità assume valori molto
+bassi, indice del fatto che il numero di falsi negativi è molto alto.
+Osservando la traccia 105 si vede che la derivazione usata è diversa e
+quindi i complessi QRS risultano ribaltati. Questo spiega l&rsquo;incapacità
+dell&rsquo;algoritmo di rilevare gli eventi.</p><p><img src=image23.png alt></p><p>Lo stesso è visibile per la 203:</p><p><img src=image24.png alt></p><p>Abbiamo infine effettuato una simulazione utilizzando un template
+costruito con 50 forme d&rsquo;onda prelevate da 5 tracce (118, 102, 115, 120,
+45). Abbiamo quindi ottimizzato i parametri su un training set di 11
+forme d&rsquo;onda (00, 01, 03, 05, 06, 07, 08, 10, 100, 101, 102) per motivi
+di tempi di esecuzione. La curva ROC è riportata di seguito:</p><p><img src=image25.png alt></p><p>Si trova che i parametri ottimi sono:</p><p>$$templateSize = 21\ campioni$$</p><p>$$threshold = 0,55$$</p><p>Applicando l&rsquo;algoritmo con i parametri ottimizzati su tutte le tracce si
+ottiene:</p><p><img src=image26.png alt></p><p>$$\text{Sen}s_{\text{average}} = 94,72%$$</p><p>$$\text{Spe}c_{\text{average}} = 98,13%$$</p><p>$$\text{Ac}c_{\text{average}} = 98,10%$$</p><h1 id=algoritmo-con-dwt>Algoritmo con DWT
+<a class=anchor href=#algoritmo-con-dwt>#</a></h1><p>È stato infine implementato un algoritmo di riconoscimento del complesso
+QRS basato sull&rsquo;utilizzo della trasformata wavelet.</p><h2 id=trasformata-wavelet>Trasformata Wavelet
+<a class=anchor href=#trasformata-wavelet>#</a></h2><p>La trasformata wavelet è una rappresentazione tempo-frequenza o meglio
+tempo-scala di tipo lineare. Essa è pensabile come il prodotto scalare
+tra il segnale $x(t)$ e la funzione della base $\psi_{\text{τs}}(t)$:</p><p>$$\text{CWT}(\tau,s) = \int x(t)\psi_{\text{τs}}^{*}(t)dt$$</p><p>con</p><p>$$\psi_{\text{τs}}(t) = \frac{1}{\sqrt{|s|}}\psi\left( \frac{t - \tau}{s} \right)$$</p><p>$\psi(t)$ è detta wavelet madre perché da essa si ottengono tutte le
+funzioni della base wavelet per traslazione e cambiamento di scala (le
+wavelet figlie sono versioni traslate e dilatate della wavelet madre).</p><p>Una wavelet, come dice il suo nome, è una &ldquo;piccola onda&rdquo; dove per
+piccola si intende che è a supporto compatto, mentre per onda si indica
+la sua natura oscillatoria (è a valor medio nullo per garantire
+l&rsquo;invertibilità). La wavelet è caratterizzata da due parametri: il
+<strong>parametro di traslazione temporale</strong> $\mathbf{\tau}$, che definisce
+dove essa è posizionata nel tempo, e il <strong>parametro di scala</strong>
+$\mathbf{s}$, che definisce come la wavelet viene dilatata o compressa.</p><p>La scala è l&rsquo;inverso della frequenza. Aumentando la scala, la wavelet
+risulta dilatata e quindi cattura informazione a più bassa frequenza. Al
+contrario, diminuendo la scala, la wavelet risulta compressa e quindi
+fornirà informazione relativamente a frequenze più alte.</p><p>L&rsquo;idea alla base è quella di calcolare quanto il segnale e la wavelet ad
+una particolare scala e posizione nel tempo sono tra loro simili, dove
+tale similarità è da intendersi nel <strong>contenuto frequenziale</strong>.</p><p>Nella pratica, quello che si va a fare è un prodotto scalare tra il
+segnale e la wavelet ad una certa scala e poi si trasla la wavelet nel
+tempo al fine di coprire tutta la durata del segnale. Si ripete lo
+stesso procedimento relativamente ad una scala diversa. I coefficienti
+wavelet &ldquo;raccontano&rdquo; quanto il segnale e la wavelet risultano simili ad
+una corrente scala: se il segnale ha un contenuto frequenziale
+corrispondente alla scala corrente, allora la wavelet alla scala
+corrente sarà simile al segnale nella porzione temporale $\tau$ in cui è
+presente quella componente frequenziale e quindi il coefficiente CWT nel
+punto $(\tau,s)$ sarà grande.</p><p>È possibile implementare la CWT in modo molto efficace, veloce e
+nativamente digitale usando la DWT. L&rsquo;idea alla base della DWT è quella
+di ottenere una rappresentazione tempo-scala di un segnale digitale
+tramite tecniche di <strong>filtraggio digitale</strong>. La DWT, infatti, si può
+ottenere facendo passare il segnale attraverso un banco di filtri: ad
+ogni livello, il segnale viene filtrato con un filtro passa-alto per
+analizzare le alte frequenze e con un filtro passa-basso per analizzare
+le basse frequenze. I filtri passa-basso sono detti <strong>funzioni di
+scalatura</strong> mentre i filtri passa-alto <strong>funzioni wavelet</strong>.</p><p><img src=image27.png alt></p><p>Lo schema riassume la logica del filtraggio. In ogni livello, gli $N$
+campioni del segnale vengono filtrati attraverso dei filtri ortogonali
+con medesima frequenza di taglio. Le uscite di entrambi i filtri vengono
+decimate: quella del passa-alto va a costituire gli $N/2^{i}$
+coefficienti DWT di livello $i - esimo$ mentre l&rsquo;uscita del passa-basso
+viene applicata ad un successivo livello di filtraggio.</p><p>La DWT analizza quindi il segnale a diverse bande frequenziali con
+risoluzioni diverse decomponendo ad ogni livello di filtraggio in due
+componenti:</p><ul><li><p>una approssimazione grezza o <em>coarse</em>, che è l&rsquo;uscita del
+passa-basso;</p></li><li><p>una informazione di dettaglio, che è l&rsquo;uscita del passa-alto.</p></li></ul><p>Ad ogni livello la risoluzione nel tempo dimezza perché viene effettuato
+un sotto-campionamento (la banda viene dimezzata quindi è possibile
+sotto-campionare) mentre la risoluzione in frequenza raddoppia (la banda
+dimezza, quindi raddoppia la scala, cioè ci spostiamo verso più basse
+frequenze).</p><p>Utilizzando una DWT non decimata, è possibile ricostruire il segnale
+come somma dell&rsquo;approssimazione di livello più alto e dei dettagli di
+tutti i livelli. Questo fatto può essere sfruttato per effettuare un
+<strong>filtraggio</strong> <strong>altamente selettivo</strong> del segnale, eliminando le
+sotto-bande non utili. Proprio questo principio viene sfruttato dal
+nostro algoritmo.</p><p><img src=image28.png alt></p><p><img src=image29.png alt></p><h2 id=descrizione-dellalgoritmo-2>Descrizione dell&rsquo;algoritmo
+<a class=anchor href=#descrizione-dellalgoritmo-2>#</a></h2><p>L&rsquo;algoritmo di event detection si basa sull&rsquo;utilizzo di una trasformata
+wavelet discreta non decimata (<em>modwt</em>, maximal overlap DWT).
+L&rsquo;obiettivo è quello di rendere maggiormente evidenti i complessi QRS
+effettuando un <strong>filtraggio passa-banda</strong> del segnale che elimini da un
+lato le basse frequenze (e quindi anche le onde P e T) e dall&rsquo;altro le
+alte frequenze (ovvero il rumore). Tale filtraggio passa-banda può
+essere facilmente realizzato tramite la decomposizione wavelet andando
+ad eliminare i coefficienti relativi alle scale più alte (bassa
+frequenza) e alle scale più basse (alta frequenza) [8].</p><p>Utilizzando una trasformata non decimata, ad ogni livello di
+decomposizione non si ha il sotto-campionamento.</p><p>La wavelet utilizzata per la decomposizione del segnale è la wavelet
+sym4 (symlet 4) con 4 momenti evanescenti. Il motivo di questa scelta
+risiede nel fatto che questa wavelet ha una <strong>forma molto simile a
+quella del QRS</strong>, come visibile dal grafico riportato:</p><p><img src=image30.png alt></p><p>La trasformata wavelet permette come detto di scomporre il segnale in
+sottobande. Il grafico mostra la decomposizione di un segmento di
+segnale ECG in 7 livelli. Possiamo osservare come i coefficienti di
+livello 3 e 4 siano quelli che riproducono meglio i complessi QRS.</p><p><img src=image31.png alt></p><p>L&rsquo;idea è quindi quella di ricostruire il segnale ECG utilizzando solo i
+dettagli di questi livelli.</p><p>Il grafico mostra la ricostruzione del segnale ECG effettuata
+rispettivamente con il solo livello 3, con il solo livello 4 e con i due
+livelli 3 e 4.</p><p><img src=image32.png alt="Immagine che contiene testo Descrizione generata
+automaticamente">{width=&ldquo;5.689627077865267in&rdquo;
+height=&ldquo;2.817050524934383in&rdquo;}</p><h3 id=passi-algoritmici>Passi algoritmici
+<a class=anchor href=#passi-algoritmici>#</a></h3><p>I passi dell&rsquo;algoritmo di rilevazione del complesso QRS basato sulla DWT
+sono i seguenti:</p><ol><li><p>Si effettua la decomposizione del segnale fino al livello 4 usando
+la funzione <em>modwt</em> e la wavelet madre sym4;</p></li><li><p>Si selezionano i livelli di dettaglio che rappresentano meglio i
+complessi QRS;</p></li><li><p>Si ricostruisce il segnale con i soli livelli selezionati
+utilizzando la funzione <em>imodwt</em>;</p></li><li><p>Si calcola il modulo al quadrato del segnale ricostruito;</p></li><li><p>Si identifica un evento ogni qualvolta il modulo al quadrato del
+segnale ricostruito presenta un massimo locale superiore ad una
+certa soglia pari proporzionale al valor medio del segnale (la
+ricerca di massimo si effettua con <em>findpeaks</em>).</p></li></ol><h3 id=ottimizzazione-2>Ottimizzazione
+<a class=anchor href=#ottimizzazione-2>#</a></h3><p>Abbiamo effettuato una simulazione relativamente alla traccia 118 usando
+una ricostruzione del segnale ECG basata unicamente sui coefficienti di
+livello 3 e ottimizzando la soglia. Costruendo le curve ROC e
+identificando il punto che massimizza le performance si è trovato che la
+soglia ottima è:</p><p>$$t_{h} = 2 \cdot average\ value$$</p><p>Con questa soglia si ottengono i seguenti valori di specificità,
+sensibilità e accuratezza sulla traccia 118:</p><p>$$sens = 99,98%$$</p><p>$$spec = 99,99%$$</p><p>$$acc = 99,99%$$</p><p>Abbiamo quindi ripetuto la stessa procedura anche per la ricostruzione
+basata sui coefficienti di livello 4. In questo caso i risultati sono
+decisamente meno buoni (la sensibilità non supera mai il 70%) quindi
+abbiamo escluso questo metodo.</p><p>Abbiamo infine ripetuto gli stessi passi nel caso di ricostruzione con
+coefficienti di livello 3 e 4. In questo caso le soglie migliori dalle
+curve ROC risultano essere</p><p>$$t_{h_{1}} = 2 \cdot average\ value$$</p><p>$$t_{h_{2}} = 3 \cdot average\ value$$</p><p>I valori di sensibilità, specificità e accuratezza ottenuti con queste
+soglie sulla traccia 118 sono rispettivamente:</p><p>$$\text{sen}s_{1} = 99,56%\ \ \ \ \ \ \ sens_{2} = 99,53%$$</p><p>$$\text{spe}c_{1} = 99,82%\ \ \ \ \ \ spec_{2} = 99,92%$$</p><p>$$\text{ac}c_{1} = 99,82%\ \ \ \ \ acc_{2} = 99,92%$$</p><p>Abbiamo quindi testato l&rsquo;algoritmo con wavelet basato sulla
+ricostruzione con i soli coefficienti di livello 3 su tutte le tracce
+del dataset con la soglia ottimizzata. Il grafico a seguire riporta i
+valori di sensibilità, specificità e accuratezza per ogni traccia:</p><p><img src=image33.png alt>{width=&ldquo;4.229377734033246in&rdquo;
+height=&ldquo;3.1720341207349083in&rdquo;}</p><p>$$\text{Spe}c_{\text{average}} = 99,96%$$</p><p>$$\text{Sen}s_{\text{average}} = 95,63%$$</p><p>$$\text{Ac}c_{\text{average}} = 99,92%$$</p><p>Stesse considerazioni sono state svolte anche nel caso della
+ricostruzione con i coefficienti del livello 3 e 4.</p><p>Con la soglia $t_{h_{1}}$ si ottengono i seguenti risultati:</p><p><img src=image34.png alt>{width=&ldquo;4.483146325459318in&rdquo;
+height=&ldquo;3.3623600174978128in&rdquo;}</p><p>$$\text{Spe}{c_{1}}_{\text{average}} = 99,88%$$</p><p>$$\text{Sen}{s_{1}}_{\text{average}} = 95,32%$$</p><p>$$\text{Ac}{c_{1}}_{\text{average}} = 99,83%$$</p><p>Con la soglia $t_{h_{2}}$ si ottengono invece i seguenti risultati:</p><p><img src=image35.png alt>{width=&ldquo;4.098147419072616in&rdquo;
+height=&ldquo;3.073611111111111in&rdquo;}</p><p>$$\text{Spe}{c_{2}}_{\text{average}} = 99,94%$$</p><p>$$\text{Sen}{s_{2}}_{\text{average}} = 94,88%$$</p><p>$$\text{Ac}{c_{2}}_{\text{average}} = 99,89%$$</p><p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+
+| Ricostruzione con | Ricostruzione con | |
+| coefficienti di livello 3 | coefficienti di | |
+| | livello 3-4 | |
++===========================+=====================+===================+
+| $$\mathbf{t}<em>{\mathbf{h} | $$\ma | $$\mathbf{t |
+| }\mathbf{= 2 \cdot avg}$$ | thbf{t}</em>{\mathbf{h} | }<em>{\mathbf{h}</em>{\m |
+| | <em>{\mathbf{1}}}\math | athbf{2}}}\mathbf |
+| | bf{= 2 \cdot avg}$$ | {= 3 \cdot avg}$$ |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+
+| $$ | $$\text{Sp | $$\text{Spe}{c |
+| \mathbf{\text{Spe}}\mathb | e}{c</em>{1}}<em>{\text{av | <em>{2}}</em>{\text{aver |
+| f{c}</em>{\mathbf{\text{avera | erage}} = 99,88%$$ | age}} = 99,94%$$ |
+| ge}}}\mathbf{= 99,96%}$$ | | |
+| | $$\text{Se | $$\text{Sen}{s |
+| $$ | n}{s_{1}}_{\text{av | _{2}}_{\text{aver |
+| \mathbf{\text{Sen}}\mathb | erage}} = 95,32%$$ | age}} = 94,88%$$ |
+| f{s}_{\mathbf{\text{avera | | |
+| ge}}}\mathbf{= 95,63%}$$ | $$\text{A | $$\text{Ac}{c |
+| | c}{c_{1}}_{\text{av | _{2}}_{\text{aver |
+| $ | erage}} = 99,83%$$ | age}} = 99,89%$$ |
+| $\mathbf{\text{Ac}}\mathb | | |
+| f{c}_{\mathbf{\text{avera | | |
+| ge}}}\mathbf{= 99,92%}$$ | | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+</p><p>Abbiamo quindi deciso di utilizzare la ricostruzione con soli
+coefficienti di livello 3. Abbiamo quindi provato ad effettuare una
+ottimizzazione della soglia a partire da un training set (tracce 22, 45,
+39, 110, 111, 112, 113, 114, 115, 116). Risulta che la soglia ottima,
+che massimizza le performance dell&rsquo;algoritmo su tutte le tracce, è
+$0.5 \cdot average$.</p><p>Con questa soglia si ottengono i seguenti risultati:</p><p><img src=image36.png alt="Immagine che contiene testo, cielo, discesa Descrizione generata
+automaticamente">{width=&ldquo;6.515971128608924in&rdquo;
+height=&ldquo;3.22619094488189in&rdquo;}</p><p>$$\text{Sen}s_{\text{average}} = 96,14%$$</p><p>$$\text{Spe}c_{\text{average}} = 99,80%$$</p><p>$$\text{Ac}c_{\text{average}} = 99,76%$$</p><h1 id=conclusioni>Conclusioni
+<a class=anchor href=#conclusioni>#</a></h1><p>+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| Algoritmo | Performance | Dettagli |
++===================+==================+==============================+
+| QRS: Fraden | $$\text{Se | Sensibile agli artefatti da |
+| Newman | n}s_{\text{avera | movimento |
+| | ge}} = 92,48%$$ | |
+| | | Poco sensibile. |
+| | $$\text{Sp | |
+| | e}c_{\text{avera | |
+| | ge}} = 98,16%$$ | |
+| | | |
+| | $$\text{A | |
+| | c}c_{\text{avera | |
+| | ge}} = 98,11%$$ | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| QRS: Template con | $$\text{Se | Template costruito a partire |
+| norma L2 | n}s_{\text{avera | da una singola traccia. |
+| | ge}} = 94,17%$$ | Performance peggiori su |
+| | | tracce con molti battiti |
+| | $$\text{Sp | ventricolari. |
+| | e}c_{\text{avera | |
+| | ge}} = 97,88%$$ | Computazionalmente |
+| | | complesso. |
+| | $$\text{A | |
+| | c}c_{\text{avera | |
+| | ge}} = 97,85%$$ | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| QRS: Template con | $$\text{Se | Template costruito a partire |
+| c | n}s_{\text{avera | da forme d&rsquo;onda di tracce |
+| ross-correlazione | ge}} = 94,72%$$ | diverse. Mostra performance |
+| | | ridotte su tracce con molti |
+| | $$\text{Sp | battiti ventricolari. |
+| | e}c_{\text{avera | Computazionalmente |
+| | ge}} = 98,13%$$ | complesso. |
+| | | |
+| | $$\text{A | |
+| | c}c_{\text{avera | |
+| | ge}} = 98,10%$$ | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+
+| QRS: algoritmo | $$\text{Se | Più sensibile e veloce. |
+| con wavelet | n}s_{\text{avera | |
+| | ge}} = 96,14%$$ | Complesso |
+| | | |
+| | $$\text{Sp | |
+| | e}c_{\text{avera | |
+| | ge}} = 99,80%$$ | |
+| | | |
+| | $$\text{A | |
+| | c}c_{\text{avera | |
+| | ge}} = 99,76%$$ | |
++&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;-+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;&mdash;+</p><h1 id=fibrillazione-atriale>Fibrillazione atriale
+<a class=anchor href=#fibrillazione-atriale>#</a></h1><h2 id=cosè-e-come-si-manifesta>Cos&rsquo;è e come si manifesta
+<a class=anchor href=#cos%c3%a8-e-come-si-manifesta>#</a></h2><p>La fibrillazione atriale è <strong>l'aritmia cardiaca</strong> più diffusa nella
+popolazione generale e la sua prevalenza tende a crescere con
+l'aumentare dell'età. Più di 6 milioni di persone in Europa presentano
+questa forma di aritmia e si prevede che la sua prevalenza raddoppierà
+nel 2050. In Italia secondo uno studio condotto nel 2010, le persone
+affette da FA sono circa 600 mila. Pur non essendo un'aritmia di per sé
+pericolosa per la vita, può esporre a delle complicanze che, in alcuni
+casi, possono rivelarsi molto invalidanti.</p><p>Si tratta di un'aritmia cardiaca sopra-ventricolare innescata da
+impulsi elettrici provenienti da cellule muscolari miocardiche presenti
+a livello della giunzione tra le quattro vene polmonari e l'atrio
+sinistro.<br>Nella fibrillazione atriale l'attività elettrica degli atri è
+completamente caotica e non coordinata con l&rsquo;attività ventricolare per
+cui non corrisponde a un'attività meccanica efficace.</p><p>La fibrillazione atriale colpisce lo 0,5 -1% della popolazione generale
+con una prevalenza che aumenta con l'età (0,1% sotto i 55 anni, 8-10%
+oltre gli 80). La maggior parte dei pazienti affetti ha quindi più di 65
+anni; gli uomini sono generalmente più colpiti rispetto alle donne come
+evidenziato dallo studio di Rotterdam (1990-1993).</p><p><img src=image37.png alt>{width=&ldquo;3.3319411636045495in&rdquo;
+height=&ldquo;1.8672747156605425in&rdquo;}</p><p>In condizioni normali, l&rsquo;impulso viene generato spontaneamente nel nodo
+seno-atriale (pacemaker naturale), situato nella parte anteriore della
+giunzione tra atrio destro e vena cava superiore. L&rsquo;impulso attraversa
+le vie internodali e arriva al nodo atrio-ventricolare, il quale
+rallenta la conduzione elettrica per far contrarre sequenzialmente atri
+e ventricoli, successivamente passa al fascio di His, da cui si diramano
+due branche (dx e sx) che trasmettono l&rsquo;impulso ai ventricoli attraverso
+le fibre del Purkinje.</p><p><img src=image38.png alt>{width=&ldquo;3.100650699912511in&rdquo;
+height=&ldquo;1.9895833333333333in&rdquo;}</p><p>Il nodo seno-atriale (SA) però non è l&rsquo;unica sede di insorgenza del
+ritmo. Infatti, in condizioni fisiologiche, tutte le cellule del sistema
+di conduzione potrebbero generare l&rsquo;impulso elettrico ad una propria
+frequenza, ed il fatto che fisiologicamente il pacemaker sia
+rappresentato dal SA è legato esclusivamente alla sua maggiore frequenza
+di scarica che impedisce alle altre cellule del sistema di conduzione di
+generare autonomamente il battito cardiaco. In stato di FA, il nodo
+seno-atriale perde il controllo dell&rsquo;attività cardiaca e l&rsquo;attività
+elettrica necessaria alla contrazione viene originata in vari siti
+nell&rsquo;atrio, prevalentemente vicino alle vene polmonari. Questo disordine
+porta alla contrazione contemporanea di singoli gruppi di cellule
+cardiache, detti &ldquo;focolai ectopici&rdquo;, causando la perdita della funzione
+contrattile atriale e la comparsa di una frequenza cardiaca irregolare.</p><p><img src=image39.png alt>{width=&ldquo;3.48128280839895in&rdquo;
+height=&ldquo;1.7025054680664917in&rdquo;}</p><p>La FA può essere classificata come un tipo di tachicardia,
+caratterizzata da un numero di impulsi al minuto compreso tra i 450 e i
+600 e, dallo scatenarsi di questi impulsi, alcune zone dell&rsquo;atrio si
+contraggono simultaneamente, altre sono in stato di rilassamento. In tal
+modo non si genererà mai una contrazione simultanea degli atri
+compromettendo la loro funzione di pompa di innesco per i ventricoli.
+Fortunatamente, il nodo atrio-ventricolare (AV) lascia entrare nel
+fascio di His e nei ventricoli 150-180 impulsi al massimo, anche in
+condizioni di FA, permettendo al cuore di continuare a svolgere la sua
+funzione di pompa, riempiendosi e svuotandosi. La fibrillazione atriale,
+quindi, accelera la funzionalità cardiaca riducendo al 20-30% la sua
+efficienza e come altre aritmie riduce la gittata cardiaca e l&rsquo;apporto
+di ossigeno necessario all&rsquo;organismo. I meccanismi che influenzano
+l&rsquo;insorgere della patologia possono essere dovuti a fattori cardiaci
+(ipertensione arteriosa, insufficienza cardiaca, patologie coronariche,
+esiti di chirurgia cardiaca) o a fattori non legati al cuore (obesità,
+patologie polmonari, diabete mellito).</p><p><img src=image40.png alt="Immagine che contiene testo Descrizione generata
+automaticamente">{width=&ldquo;4.5641021434820646in&rdquo;
+height=&ldquo;1.9302351268591427in&rdquo;}</p><p>In alcuni casi si presenta in assenza di apparenti condizioni favorenti,
+ossia in assenza di una cardiopatia strutturale o di condizioni
+sistemiche (come l'ipertiroidismo) che la possano determinare. Si parla
+quindi di <strong>fibrillazione isolata</strong> e rappresenta in genere meno del 30%
+dei casi.</p><p>Dal punto di vista clinico la fibrillazione atriale si suddivide in base
+al modo di presentazione e alla durata dell&rsquo;aritmia in (Linee Guida 2012
+ESC, European Society of Cardiology):</p><ul><li><p><strong>parossistica</strong>: quando gli episodi si presentano e si risolvono
+spontaneamente in un tempo inferiore a una settimana;</p></li><li><p><strong>persistente</strong>: quando l'episodio aritmico dura più di 7 giorni e
+non si interrompe spontaneamente ma solo a seguito di interventi
+terapeutici esterni (farmacologici o elettrici);</p></li><li><p><strong>permanente</strong>: quando non siano ritenuti opportuni tentativi di
+cardioversione, o gli interventi terapeutici si siano dimostrati
+inefficaci. In tal caso, si decide di non cercare più di
+ripristinare il ritmo sinusale;</p></li><li><p><strong>asintomatica</strong>: quando essa si presenta in modo silente ovvero non
+dando al paziente dei sintomi rilevabili per cui non viene
+diagnosticata.</p></li></ul><p>Più spesso, la fibrillazione atriale è associata a <strong>sintomi</strong>; i più
+frequenti sono: palpitazioni (dovute all&rsquo;irregolarità del battito),
+debolezza o affaticabilità (per via della ridotta gittata cardiaca),
+raramente sincope, dolore toracico. In alcuni casi è asintomatica o se
+sono presenti sintomi non vengono riconosciuti dal paziente, che si
+limita ad adeguare il proprio stile di vita. Un esempio è la riduzione
+della tolleranza allo sforzo. Oltre ai sintomi, talvolta invalidanti, la
+fibrillazione atriale mette a rischio di <strong>eventi trombotici</strong>, poiché
+l'immobilità meccanica degli atrii favorisce la formazione di coaguli
+che possono in seguito migrare nel circolo cerebrale e provocare
+ischemie e ictus cerebrale.</p><p>La mortalità cardiovascolare è aumentata nei soggetti interessati da
+fibrillazione atriale e la qualità della vita è ridotta. Inoltre, la
+persistenza della fibrillazione atriale determina un <strong>rimodernamento
+degli atrii</strong>, che assumono caratteristiche elettriche, anatomiche e
+strutturali (dilatazione, fibrosi) tali da favorire il perpetuarsi
+dell'aritmia.</p><p>Diagnosticare una condizione di fibrillazione atriale è importante anche
+se spesso risulta difficile, sia perché i sintomi non sono sempre
+evidenti, sia perché la FA è un evento imprevedibile. Uno degli
+strumenti maggiormente utilizzati per riconoscere questa forma di
+aritmia è l&rsquo;utilizzo del tracciato elettrocardiografico. Gli <strong>aspetti</strong>
+elettrocardiograficamente <strong>salienti</strong> della <strong>fibrillazione atriale</strong>
+sono:</p><ul><li><p>l'<strong>assenza di una onda P</strong> (onda di attivazione atriale) vera e
+propria, che è sostituita dalle onde di fibrillazione dette onde f,
+di forma, durata e frequenza irregolare. Di fatto, l&rsquo;onda P viene
+sostituita da una linea irregolare associata all&rsquo;assenza di
+contrazione dovuta all&rsquo;attività atriale disorganizzata;</p></li><li><p>l'<strong>irregolarità degli intervalli RR</strong> dovuta al fatto che un
+grande numero di impulsi raggiunge il nodo atrio-ventricolare e il
+numero di impulsi che vengono lasciati passare per raggiungere i
+ventricoli dipende dalle caratteristiche elettrofisiologiche del
+nodo AV ma anche dalle altre porzioni del sistema di conduzione, dal
+tono del sistema nervoso autonomo ecc. Tutte queste variabili
+contribuiscono alla variazione di durata degli intervalli RR. I
+complessi QRS sono normali perché la conduzione nei ventricoli e
+verso i ventricoli segue il percorso normale.</p></li></ul><p><img src=image41.png alt="Immagine che contiene freccia Descrizione generata
+automaticamente">{width=&ldquo;4.416666666666667in&rdquo;
+height=&ldquo;1.8034722222222221in&rdquo;}</p><p>Se gli episodi si presentano ad intermittenza è necessario utilizzare un
+dispositivo di monitoraggio (holter) per un certo periodo di tempo, che
+registra continuamente l&rsquo;attività del cuore.</p><p>Esistono diverse <strong>strategie cliniche</strong> per trattare la fibrillazione
+atriale e una di queste è la terapia farmacologica. I farmaci utilizzati
+in quest&rsquo;ultimo caso agiscono sui canali del potassio, bloccandoli e
+cercando di allungare il potenziale d&rsquo;azione in maniera tale da
+aumentare il periodo refrattario delle fibre cardiache e impedendo la
+generazione di un altro battito a breve distanza temporale.</p><p>Infine, un&rsquo;altra terapia è l&rsquo;ablazione trans catetere, procedura non
+chirurgica che prevede la cauterizzazione di alcune zone del tessuto
+cardiaco attraverso l&rsquo;utilizzo di un catetere.</p><h2 id=descrizione-dellalgoritmo-di-rilevazione-della-fibrillazione-atriale>Descrizione dell&rsquo;algoritmo di rilevazione della fibrillazione atriale
+<a class=anchor href=#descrizione-dellalgoritmo-di-rilevazione-della-fibrillazione-atriale>#</a></h2><p>Abbiamo implementato un algoritmo basato sul paper [1]. Questo
+algoritmo sfrutta la rapida e irregolare attività elettrica che
+caratterizza la fibrillazione atriale, la quale produce un incremento
+sia nella variabilità che nella complessità degli intervalli RR.</p><p>Proprio a partire da queste caratteristiche di variabilità e
+complessità, l&rsquo;algoritmo combina due metodi, diagramma di Poincaré e la
+sample entropy, per quantificare rispettivamente la variabilità e la
+complessità degli intervalli RR.</p><h3 id=plot-di-poincaré>Plot di Poincaré
+<a class=anchor href=#plot-di-poincar%c3%a9>#</a></h3><p>Un diagramma di Poincaré è un diagramma di ricorrenza che viene usato
+per quantificare l&rsquo;auto-similarità nei processi. Il ritmo di un cuore
+sano è normalmente controllato in modo molto rigoroso dai meccanismi
+regolatori del corpo. Il digramma di Poincaré può essere usato per
+visualizzare e rilevare la presenza di oscillazioni nell&rsquo;azione cardiaca
+legata a malattie o anomalie del cuore, come nel caso della
+fibrillazione atriale. [6] [7]</p><p><img src=image42.png alt>{width=&ldquo;3.0678762029746283in&rdquo;
+height=&ldquo;2.3009076990376203in&rdquo;}
+<img src=image43.png alt>{width=&ldquo;3.2522790901137357in&rdquo;
+height=&ldquo;2.439209317585302in&rdquo;}</p><p>I precedenti grafici sono diagrammi di Poincaré relativi al cuore con
+fibrillazione atriale (sinistra) e quello senza fibrillazione atriale
+(destra). La differenza nella forma tra i due casi è chiaramente
+visibile.</p><p>Il diagramma di Poincaré viene costruito esprimendo ciascun intervallo
+RR in funzione del precedente. Di fatto, si riportano gli $RR_{i}$
+sull&rsquo;asse delle ascisse e gli $RR_{i + 1}$ su quello delle ordinate.
+Tutti i punti descritti da battiti cardiaci consecutivi di uguale durata
+$RR_{i} = RR_{i + 1}$ sono posizionati sulla bisettrice. I punti che
+rappresentano intervalli RR sopra la bisettrice corrispondono a dei
+prolungamenti $RR_{i} &lt; RR_{i + 1}$ mentre tutti quelli che si trovano
+al di sotto corrispondono ad un accorciamento della durata di due
+battiti successivi $RR_{i} > RR_{i + 1}$. [2] [5]</p><p>Il plot di Poincaré è normalmente caratterizzato da due descrittori,
+$SD1$ e $SD2$:</p><ul><li><p>$SD1$ rappresenta la dispersione rispetto alla bisettrice e
+identifica la variabilità della frequenza cardiaca a breve termine
+(variabilità istantanea battito per battito). Per calcolarla, i
+punti del plot vengono proiettati su una linea perpendicolare alla
+bisettrice e se ne calcola la deviazione standard;</p></li><li><p>$SD2$ rappresenta la dispersione rispetto ad un asse perpendicolare
+alla bisettrice. Esso quantifica la variabilità a lungo termine. Per
+calcolarla, i punti del plot sono proiettati su una linea parallela
+alla bisettrice e se ne calcola la deviazione standard.</p></li></ul><p>Nello specifico,</p><p>$$x = \lbrack RR_{1},\ RR_{2},\ \ldots,\ RR_{N - 1}\rbrack$$</p><p>$$y = \lbrack RR_{2},\ RR_{3},\ \ldots,\ RR_{N}\rbrack$$</p><p>$$x_{1} = \frac{x - y}{\sqrt{2}}\text{\ \ \ \ \ \ }x_{2} = \frac{x + y}{\sqrt{2}}$$</p><p>$$SD1 = \sqrt{{var(x}_{1})}$$</p><p>$$SD2 = \sqrt{var(x_{2})}$$</p><p>Una volta calcolati questi parametri si va a determinare l&rsquo;area
+dell&rsquo;ellisse che riflette la variabilità totale degli intervalli RR:</p><p>$$S = \pi \cdot SD1 \cdot SD2$$</p><p><img src=image44.png alt>{width=&ldquo;3.577929790026247in&rdquo;
+height=&ldquo;2.9096150481189853in&rdquo;}</p><h3 id=sample-entropy>Sample Entropy
+<a class=anchor href=#sample-entropy>#</a></h3><p>La sample entropy è utilizzata per stimare la complessità di serie
+temporali. Nell&rsquo;algoritmo viene utilizzata per caratterizzare la
+complessità degli intervalli RR.</p><p>Per una data embedding dimension $m$, tolleranza $r$ e un numero di
+punti $N$, la sample entropy è il logaritmo naturale cambiato di segno
+della probabilità che se due set di punti simultanei di lunghezza $m$
+hanno distanza minore di $r$, anche due set di punti simultanei di
+lunghezza $m + 1$ hanno distanza minore di $r$.</p><p>Più nel dettaglio, si considera una serie temporali di dati di lunghezza
+$N$ con un intervallo di tempo costante $\tau$:</p><p>$$N = { x_{1},\ x_{2},\ \ldots,\ x_{N}}$$</p><p>Si costruiscono $i = 1,\ldots,\ N - m + 1$ vettori di lunghezza $m$:</p><p>$$RR_{m}(i) = \left\lbrack RR_{i}\ R_{i + 1}\ldots RR_{i + m - 1} \right\rbrack$$</p><p>Si calcola la probabilità che ognuno di questi vettori sia simile a
+$RR_{m}(i)$:</p><p>$$C_{i}(m,r) = \frac{n_{i}(m,r)}{N - m + 1}$$</p><p>Con:</p><ul><li><p>$r$ la tolleranza sulla similarità tra due vettori;</p></li><li><p>$n_{i}(m,r)$ è il numero di vettori $RR_{m}(j)$ che sono simili a
+$RR_{m}(i)$ con $i \neq j$, ovvero tale per cui vale la relazione:</p></li></ul><p>$$d\left( RR_{m}(i),\ RR_{m}(j) \right) = \max\left( \left| RR_{i + k} - RR_{j + k} \right| \right) &lt; r\ \ \ con\ \ \ k = 0,\ \ldots,\ m - 1\ \ $$</p><p>Si va quindi a calcolare la probabilità media:</p><p>$$A(m,r) = \frac{1}{N - m + 1}\sum_{i = 1}^{N - m + 1}{C_{i}(m,r})$$</p><p>Si ripete lo stesso procedimento anche per $m + 1$ ottenendo la
+probabilità media $B(m + 1,r)$. Si va quindi a calcolare la sample
+entropy come:</p><p>$$\text{SampleEntropy}(RR,m,r) = - \ln\frac{B(m + 1,r)}{A(m,r)}$$</p><p>Di fatto, $A$ è il numero di coppie di vettori per i quali
+$d\left\lbrack RR_{m}(i),RR_{m}(j) \right\rbrack &lt; r$ mentre $B$ è il
+numero di coppie per le quali
+$d\left\lbrack RR_{m + 1}(i),RR_{m + 1}(j) \right\rbrack &lt; r$.</p><p>Un valore basso di sample entropy indica la presenza di una certa
+auto-similarità nel dataset.</p><p>In generale, il valore di $m$ è scelto pari a $2$ e quello della
+tolleranza $r$ pari a $0.2 \cdot std$.</p><h3 id=passi-dellalgoritmo>Passi dell&rsquo;algoritmo
+<a class=anchor href=#passi-dellalgoritmo>#</a></h3><p>I passi dell&rsquo;algoritmo di riconoscimento della fibrillazione atriale
+sono i seguenti:</p><ol><li><p>per ogni traccia si calcolano gli intervalli $\text{RR}$ a partire
+dalle annotazioni del medico. Questa scelta è dettata dalla volontà
+di osservare i risultati di questo algoritmo senza l&rsquo;interferenza
+relativa alla bontà dell&rsquo;algoritmo di riconoscimento del QRS;</p></li><li><p>una volta calcolati gli intervalli $\text{RR}$ si suddivide la serie
+temporale in segmenti non sovrapposti di $L$ intervalli ciascuno;</p></li><li><p>in ciascuno di questi segmenti si va a calcolare il parametro $S$
+(funzione <em>poincarePlot</em>) legato alla variabilità totale degli
+intervalli e la sample entropy (<em>sampleEntropy</em>) legata alla
+complessità degli intervalli;</p></li></ol><p>$${\text{if}(S > thS)&(SampleEntropy > thE)
+}{\text{is\ AFIB}
+}{\text{else}
+}\text{is\ ~NOT\ AFIB}$$</p><p>La classificazione sui segmenti di $L$ intervalli $\text{RR}$ è stata
+poi convertita in una classificazione battito per battito tramite la
+funzione <em>afibContingency</em>.</p><p>Il grafico riporta i valori di sensibilità, specificità e accuratezza
+dell&rsquo;algoritmo con le soglie consigliate dal paper ovvero $thS = 0.01$ e
+$thE = 1.2$.</p><p><img src=image45.png alt>{width=&ldquo;5.736842738407699in&rdquo;
+height=&ldquo;3.544808617672791in&rdquo;}</p><p>$$\text{Sen}s_{\text{average}} = 79,76%$$</p><p>$\text{Spe}c_{\text{average}} = 91,95%$</p><p>$$\text{Ac}c_{\text{average}} = 93,95%$$</p><p>La traccia 30, di durata di circa 6 ore, non presenta fibrillazione
+atriale. In questo caso l&rsquo;algoritmo classifica correttamente il paziente
+come non malato:</p><p>$$TP = 0$$</p><p>$$TN = 31190$$</p><p>$$FP = 0$$</p><p>$$FN = 0$$</p><p>La traccia 17 presenta 24 ore e 55 minuti di fibrillazione atriale
+(tutti i battiti sono fibrillazione atriale). In questo caso l&rsquo;algoritmo
+identifica:</p><p>$$TP = 136960$$</p><p>$$TN = 0$$</p><p>$$FP = 0$$</p><p>$$FN = 1100$$</p><p>La traccia 18 presenta 24 ore e 59 minuti di fibrillazione atriale
+(tutti i battiti sono fibrillazione atriale). In questo caso l&rsquo;algoritmo
+identifica:</p><p>$$TP = 141312$$</p><p>$$TN = 0$$</p><p>$$FP = 0$$</p><p>$$FN = 201$$</p><p>Si è provato ad effettuare una ottimizzazione utilizzando un training
+set. Le tracce del training set sono le seguenti (00, 01, 03, 05, 06,
+07, 08, 10, 100, 101, 102, 103, 104, 105, 11, 110, 111, 112, 113, 114,
+115, 116, 117, 118, 119, 12, 120, 121, 122, 15, 16, 17, 18, 19, 20, 200,
+201, 202, 203, 204, 205, 206, 207, 208, 21, 22, 23, 24, 25, 26, 28, 32,
+33, 34). Abbiamo di nuovo tracciato le curve ROC e ottenuto i seguenti
+valori ottimi per le soglie:</p><p><img src=image46.png alt></p><p>$$thS = 0.0085$$</p><p>$$thE = 1.22$$</p><p>Si osserva un minimo miglioramento rispetto al caso delle soglie del
+paper, come mostrato dai grafici:</p><p><img src=image47.jpeg alt>{width=&ldquo;5.979861111111111in&rdquo;
+height=&ldquo;3.1457272528433946in&rdquo;}</p><p>$$\text{Sen}s_{\text{average}} = 79,87%$$</p><p>$$\text{Spe}c_{\text{average}} = 91,91%$$</p><p>$$\text{Ac}c_{\text{average}} = 93,98%$$</p><p>Il grafico mostra i risultati relativi all&rsquo;applicazione dell&rsquo;algoritmo
+di fibrillazione atriale sulle tracce ECG del database <em>MIT-BIH normal
+sinus rhythm database</em> relative a cuori normali. I valori di specificità
+ottenuti non sono altissimi pertanto c&rsquo;è un numero non trascurabile di
+falsi positivi. Abbiamo comunque ritenuto che l&rsquo;algoritmo fosse valido
+soprattutto in vista di una eventuale revisione da parte del medico.</p><p><img src=image48.png alt>{width=&ldquo;6.261395450568679in&rdquo;
+height=&ldquo;1.2266666666666666in&rdquo;}</p><p><img src=image48.png alt>{width=&ldquo;6.261395450568679in&rdquo;
+height=&ldquo;1.2368055555555555in&rdquo;}</p><p>$$\text{Spe}c_{\text{average}} = 93,95%$$</p><p>Si riportano i risultati relativi all&rsquo;applicazione dell&rsquo;algoritmo sulla
+traccia 00. In rosso sono riportate le annotazioni relative al nostro
+algoritmo mentre quelle in verde sono quelle del gold standard (tali
+annotazioni si riferiscono a intervalli in cui si manifesta la
+fibrillazione atriale, ottenute collegando con una linea il primo e
+l&rsquo;ultimo battito di fibrillazione atriale):</p><p><img src=image49.png alt></p><h3 id=alcune-osservazioni-sui-risultati-ottenuti>Alcune osservazioni sui risultati ottenuti
+<a class=anchor href=#alcune-osservazioni-sui-risultati-ottenuti>#</a></h3><p><img src=image50.jpeg alt></p><p>Come visibile dal grafico relativo all&rsquo;accuratezza, sensibilità e
+specificità dell&rsquo;algoritmo su tutte le tracce con i valori ottimizzati
+delle soglie, la specificità risulta molto bassa, se non addirittura
+nulla per alcune tracce. In particolare, in alcune delle tracce in cui
+questo si verifica (15, 200, 74), il numero di $\text{TN}$ è molto basso
+perché le tracce manifestano per quasi la loro totalità fibrillazione
+atriale. Nella traccia 103, invece, la ragione della bassa specificità è
+legata ad un elevato numero di falsi positivi.</p><p>Si osserva che alcune tracce presentano valori molto bassi di
+sensibilità. In alcune tracce, la fibrillazione atriale ha una durata
+inferiore ai 3 minuti per cui il numero di $\text{TP}$ è molto molto
+piccolo. Ne fanno parte, la traccia 05, 08, 24, 37, 47.</p><p>Il problema è anche legato al fatto che per come è pensato l&rsquo;algoritmo
+il comportamento ottimale si ha per segmenti di $L = 128$ intervalli RR
+(non è riducibile perché la tolleranza $r$ sulla sample entropy è
+proporzionale alla deviazione standard nel segmento). Questo comporta
+l&rsquo;impossibilità di discriminare eventi fibrillatori di durata troppo
+inferiore alla finestra.</p><p>Abbiamo quindi in generale osservato che se nella traccia gli eventi
+fibrillatori sono di durata molto breve e sono molto sparsi all&rsquo;interno
+delle 24 ore l&rsquo;algoritmo è fallimentare anche se sono molti.</p><p><img src=image51.png alt></p><p>Il grafico è relativo alla traccia 100. In rosso le annotazioni del
+nostro algoritmo, in verde quelle del gold standard. È esemplificativo
+della problematica della finestra. La prima parte del tracciato non
+viene riconosciuta come AFIB perché i battiti di fibrillazione rientrano
+nella finestra precedente che contiene per la maggior parte battiti
+normali. Stesse considerazioni sono valide per la parte finale del
+tracciato. D&rsquo;altro canto, la porzione di tracciato rilevata come AFIB
+non riesce a tenere conto dei brevi intervalli di tempo in cui i battiti
+ritornano normali perché nella finestra i battiti sono per la maggior
+parte fibrillatori.</p><p>Possiamo quindi asserire che la scarsa sensibilità dell&rsquo;algoritmo può
+essere messa in relazione alla sua natura di classificazione in
+segmenti: la classificazione viene infatti eseguita su un intervallo di
+battiti e non sul singolo battito.</p><h4 id=osservazioni-sullalgoritmo-di-contingenza-della-fibrillazione-atriale>Osservazioni sull&rsquo;algoritmo di contingenza della fibrillazione atriale
+<a class=anchor href=#osservazioni-sullalgoritmo-di-contingenza-della-fibrillazione-atriale>#</a></h4><p>Per alcune tracce in cui vi erano solo battiti di fibrillazione atriale
+$TN = 0,\ \ FP = 0$ oppure nel caso in cui la traccia presentava solo
+battiti normali $TP = 0,\ \ FN = 0$, l&rsquo;algoritmo di contingenza forniva
+una indicazione NaN rispettivamente per specificità e sensibilità. Il
+caso è stato previsto come classificazione corretta del soggetto.</p><h1 id=bibliografia>Bibliografia
+<a class=anchor href=#bibliografia>#</a></h1><p>[1] R. Mabrouki "Atrial Fibrillation detection on
+electrocardiogram," 2016 2nd International Conference on Advanced
+Technologies for Signal and Image Processing (ATSIP), 2016, pp. 268-272,
+doi: 10.1109/ATSIP.2016.7523112.</p><p>[2] Guzik P, Piskorski J, Krauze T, Wykretowicz A, Wysocki H. Heart
+rate asymmetry by Poincaré plots of RR intervals. Biomed Tech (Berl).
+2006 Oct;51(4):272-5. doi: 10.1515/BMT.2006.054. PMID: 17061956.</p><p>[3]
+<a href=https://it.mathworks.com/matlabcentral/answers/161223-how-to-remove-transient-effect-in-the-beginning-of-the-filtered-signal>https://it.mathworks.com/matlabcentral/answers/161223-how-to-remove-transient-effect-in-the-beginning-of-the-filtered-signal</a></p><p>[4] Linee Guida 2012 ESC europea society of cardiology</p><p>[5] Piskorski, Guzik, Geometry of the Poincare plot of RR intervals
+and its asymmetry in healthy adult Institute of Physics, University of
+Zielona Gora, Prof. Szafrana 4a, 65-516</p><p>[6] &ldquo;Poincaré Graph, complete ECG record in one sight&rdquo;, BTL
+cardiopoint</p><p>[7] Do existing measures of Poincare plot geometry reflect nonlinear
+features of heart rate variability?,
+<a href=https://ieeexplore.ieee.org/author/38556221600>M.
+Brennan</a>; 
+<a href=https://ieeexplore.ieee.org/author/38320621600>M.
+Palaniswami</a>; 
+<a href=https://ieeexplore.ieee.org/author/38556109400>P.
+Kamen</a></p><p>[8]
+<a href=https://it.mathworks.com/help/wavelet/ug/wavelet-analysis-of-physiologic-signals.html>https://it.mathworks.com/help/wavelet/ug/wavelet-analysis-of-physiologic-signals.html</a></p></article><footer class=book-footer><div class="flex flex-wrap justify-between"></div><script>(function(){function a(c){const a=window.getSelection(),b=document.createRange();b.selectNodeContents(c),a.removeAllRanges(),a.addRange(b)}document.querySelectorAll("pre code").forEach(b=>{b.addEventListener("click",function(c){a(b.parentElement),navigator.clipboard&&navigator.clipboard.writeText(b.parentElement.textContent)})})})()</script></footer><label for=menu-control class="hidden book-menu-overlay"></label></div><aside class=book-toc><div class=book-toc-content><nav id=TableOfContents><ul><li><a href=#obiettivi-e-descrizione-del-database>Obiettivi e descrizione del database</a></li><li><a href=#algoritmi-di-riconoscimento-del-complesso-qrs>Algoritmi di riconoscimento del complesso QRS</a><ul><li><a href=#algoritmo-di-fraden-newman>Algoritmo di Fraden-Newman</a><ul><li><a href=#pre-processing>Pre-processing</a></li><li><a href=#elaborazione>Elaborazione</a></li><li><a href=#decisione-e-ottimizzazione>Decisione e ottimizzazione</a></li></ul></li></ul></li><li><a href=#metodo-con-template>Metodo con template</a><ul><li><ul><li><a href=#descrizione-algoritmo-di-costruzione-del-template>Descrizione algoritmo di costruzione del template</a></li></ul></li><li><a href=#metodo-della-distanza-con-norma-l2>Metodo della distanza con norma L2</a><ul><li><a href=#descrizione-dellalgoritmo>Descrizione dell&rsquo;algoritmo</a></li><li><a href=#ottimizzazione>Ottimizzazione</a></li></ul></li><li><a href=#metodo-della-cross-correlazione-normalizzata>Metodo della cross-correlazione normalizzata</a><ul><li><a href=#descrizione-dellalgoritmo-1>Descrizione dell&rsquo;algoritmo</a></li><li><a href=#ottimizzazione-1>Ottimizzazione</a></li></ul></li></ul></li><li><a href=#algoritmo-con-dwt>Algoritmo con DWT</a><ul><li><a href=#trasformata-wavelet>Trasformata Wavelet</a></li><li><a href=#descrizione-dellalgoritmo-2>Descrizione dell&rsquo;algoritmo</a><ul><li><a href=#passi-algoritmici>Passi algoritmici</a></li><li><a href=#ottimizzazione-2>Ottimizzazione</a></li></ul></li></ul></li><li><a href=#conclusioni>Conclusioni</a></li><li><a href=#fibrillazione-atriale>Fibrillazione atriale</a><ul><li><a href=#cosè-e-come-si-manifesta>Cos&rsquo;è e come si manifesta</a></li><li><a href=#descrizione-dellalgoritmo-di-rilevazione-della-fibrillazione-atriale>Descrizione dell&rsquo;algoritmo di rilevazione della fibrillazione atriale</a><ul><li><a href=#plot-di-poincaré>Plot di Poincaré</a></li><li><a href=#sample-entropy>Sample Entropy</a></li><li><a href=#passi-dellalgoritmo>Passi dell&rsquo;algoritmo</a></li><li><a href=#alcune-osservazioni-sui-risultati-ottenuti>Alcune osservazioni sui risultati ottenuti</a></li></ul></li></ul></li><li><a href=#bibliografia>Bibliografia</a></li></ul></nav></div></aside></main></body></html>

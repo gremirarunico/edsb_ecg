@@ -1,0 +1,1 @@
+navigator.serviceWorker&&navigator.serviceWorker.register("/edsb_ecg/sw.js",{scope:"/edsb_ecg/"})
